@@ -1,0 +1,14 @@
+
+# Alembic migration 
+
+
+## Useful commands:
+- **Init alembic project: ** `alembic init project_name`
+- **Initial migration:** `alembic init database-migrations`
+- **Create database migration script:** `alembic revision --autogenerate -m "Migration message"`
+- **Run database migration:** `alembic upgrade head`
+
+
+## Important info:
+- **Alembic config database url:** *`root_folder/alembic.init`* -> *`sqlalchemy.url`*
+- **Alembic current database model:** *`root_folder/database-migration/env.py`* -> *`target_metadata`*

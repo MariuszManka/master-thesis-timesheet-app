@@ -1,0 +1,199 @@
+@import "../../common/styles/theme.scss";
+
+
+$disabled-field-color: #b2b2b2;
+$table-view-nav-height: 41px;
+
+.profil-page-outer-wrapper {
+   @include outer-page-content-wrapper;
+}
+
+.profil-page-header-wrapper {
+   @include page-header-wrapper;
+}
+
+.profil-page-content-inner-wrapper {
+   display: grid;
+   grid-template-columns: min-content 1fr; 
+   grid-template-rows: 1fr;
+   grid-template-areas: 'profil-page-content-avatar-panel profil-page-content-info-panel';
+   column-gap: 40px;
+
+   .profil-page-content-avatar-panel {
+
+      $avatar-background-color: #FFF;
+
+      height: 500px + $table-view-nav-height;
+      grid-area: profil-page-content-avatar-panel;
+      background-color: $avatar-background-color;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 30px 60px;
+
+      & h4 {
+         font-size: 1.2rem;
+         margin: 30px 0 8px 0;
+         white-space: nowrap;
+         text-transform: capitalize;
+      }
+
+      & p {
+         margin: 0;
+         color: #848495;
+      }
+
+      .profil-page-content-avatar-panel-user-avatar-wrapper {
+         position: relative;
+
+         & img {
+            width: 180px;
+            border-radius: 50%;
+         }
+
+         .profil-page-content-avatar-panel-file-upload-button {
+            position: absolute;
+            bottom: 0;
+            right: 0px;
+            border: 5px solid $avatar-background-color;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            width: 50px !important;
+            height: 50px !important;
+            min-width: unset !important;
+            background-color: $main-app-navy-color;
+   
+           .p-button-icon.pi-camera {
+               font-size: 22px;
+           }
+   
+           .p-button-label.p-clickable {
+              display: none;
+           }
+         }
+
+      }
+
+      .profil-page-content-avatar-panel-user-statistic-wrapper {
+         width: 100%;
+         display: flex;
+         justify-content: space-between;
+
+         .profil-page-content-avatar-panel-user-statistic-number {
+            color: #72023e;
+            font-weight: 700;
+         }
+      }
+   }
+
+   .profil-page-content-info-panel {
+      grid-area: profil-page-content-info-panel;
+
+      .p-tabview-nav-container {
+         height: $table-view-nav-height !important;
+      }
+
+      .p-tabview-panels {
+         padding: 0;
+      }
+   }
+}
+
+
+.profile-page-form-wrapper {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   align-items: center;
+   row-gap: 30px;
+   padding: 30px 20px;
+   column-gap: 15px;
+
+   .profile-form-switch-wrapper {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      height: 100%;
+      column-gap: 15px;
+
+      .p-highlight:has(> .p-inputswitch-slider) {
+         background: #020772;
+         border-radius: 0.5rem;
+
+         .p-inputswitch-slider::before {
+            background:white;
+         }
+      }
+   }
+
+   .profile-form-input-wrapper {
+      display: flex;
+      flex-direction: column;
+      row-gap: 10px;
+
+      label {
+         margin-bottom: 5px;
+      }
+
+      label:has(+.profil-form-input:disabled){
+         color: $disabled-field-color;
+      }
+
+      label:has(+.p-disabled.profil-form-dropdown-input){
+         color: $disabled-field-color;
+      }  
+
+      .profil-form-input {
+         grid-column: span 1;
+         width: 280px;
+         margin-left: 5px;
+         border: 1px solid #dddde2;
+         font-size: 1rem;
+         color: rgba(0, 0, 0, 0.87);
+         background-color: #FFF;
+         border-radius: 4px;
+         padding: 0.75rem 0.75rem;
+         transition: all .2s linear;
+         outline: none;
+      }
+
+      .profil-form-input:disabled {
+         color: $disabled-field-color;
+      }
+
+      .profil-form-input:disabled:hover {
+         border-color: #dddde2;
+      }
+
+      .profil-form-dropdown-input {
+         padding: 0;
+      }
+
+      .profil-form-input:focus {
+         border-color:  #00010e;
+      }
+
+   }
+
+   .profile-form-update-submit-button {
+      grid-column: span 2;
+      margin: 40px auto 0 auto;
+      padding: 10px 60px;
+      height: 50px;
+      background-color: #020772;
+      color: white;
+      font-size: 18px;
+      font-weight: 500;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      text-transform: none;
+
+      &:hover {
+         background-color: $main-app-navy-color;
+      }
+   }
+}

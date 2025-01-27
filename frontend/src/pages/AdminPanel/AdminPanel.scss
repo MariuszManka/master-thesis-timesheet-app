@@ -1,0 +1,38 @@
+@import '../../common/styles/theme.scss';
+
+.admin-pannel-outer-wrapper {
+   @include outer-page-content-wrapper;
+}
+
+.admin-panel-header-wrapper {
+   @include page-header-wrapper;
+}
+
+.admin-panel-accordion-outer-wrapper {
+   .MuiAccordionSummary-expandIconWrapper { // STAŁA NAZWA KLASY, NIE ZMIENIAĆ
+      color: $main-app-navbar-background !important
+   }
+
+   .admin-panel-accordion-header {
+      font-size: 18px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      color: $main-app-navbar-background !important; 
+      column-gap: 8px;
+
+      & h4 {
+         margin: 0 !important;
+      }
+   }
+}
+
+.admin-pannel-content-section-outer-wrapper {
+   display: flex;
+   flex-direction: column;
+   row-gap: 45px;
+}
+
+.admin-panel-option {
+   color: $main-app-navy-color;
+}

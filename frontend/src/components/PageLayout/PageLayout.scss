@@ -1,0 +1,32 @@
+@import '../../common/styles/theme.scss';
+
+
+.page-wrapper {
+   position: relative;
+   display: grid;
+   grid-template-columns: $navbar-width 1fr;
+   grid-template-rows: 1fr;
+   grid-template-areas: 
+   "navbar page-content"; 
+   height: 100%;
+
+
+
+   // overflow-x: hidden;
+
+   
+}
+
+.page-layout-outer-wrapper {
+   grid-area: page-content;
+}
+
+.page-content-wrapper {
+   // margin-left: $navbar-width;
+   // min-height: 100vh;
+
+
+   // min-width: calc(100vw - $navbar-width);
+
+
+}

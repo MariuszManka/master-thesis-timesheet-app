@@ -1,0 +1,99 @@
+@import "../../../../common/styles/theme.scss";
+
+
+
+
+.add-user-page-form-wrapper {
+   position: relative;
+   width: 600px;
+   display: flex;
+   flex-direction: column;
+   row-gap: 30px;
+   justify-content: center;
+   align-items: center;
+   margin: 0 auto;
+   border: 1px solid $main-form-border-color;
+   border-radius: 30px;
+   padding: 40px;
+
+   .add-user-page-form-label {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      white-space: nowrap;
+      background-color: $page-color;
+      font-size: 24px;
+      margin: 0;
+      padding: 0 10px;
+      color: $main-app-navy-color;
+      font-weight: 500;
+   }
+
+   .add-user-form-input-wrapper {
+      width: 100% !important;
+      display: flex;
+      flex-direction: column;
+      row-gap: 10px;
+
+      label {
+         margin-bottom: 5px;
+      }
+
+      small {
+         margin-left: 3px;
+      }
+   }
+
+   .add-user-form-input {
+      &:hover {
+         border-color: $main-app-navy-color;
+      }
+
+      &:focus {
+         border-color: $main-app-navy-color;
+      }
+
+      &:active {
+         border-color: $main-app-navy-color;
+      }
+   }
+
+   .add-user-form-switch-wrapper {
+      display: flex;
+      align-items: center;
+      align-self: flex-start;
+      column-gap: 10px;
+
+      & label {
+         font-size: 18px;
+      }
+
+      .p-highlight:has(> .p-inputswitch-slider) {
+         background: #020772;
+         border-radius: 0.5rem;
+
+         .p-inputswitch-slider::before {
+            background:white;
+         }
+      }
+   }
+
+   .add-user-form-submit-button {
+      padding: 10px 30px;
+      height: 50px;
+      background-color: #020772;
+      color: white;
+      font-size: 18px;
+      font-weight: 500;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      text-transform: none;
+
+      &:hover {
+         background-color: $main-app-navy-color;
+      }
+   }
+}

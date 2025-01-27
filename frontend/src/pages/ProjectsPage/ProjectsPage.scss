@@ -1,0 +1,45 @@
+// INSPO: https://blocks.primereact.org/application/dashboard
+
+
+
+@import '../../common/styles/theme.scss';
+
+
+
+$project-card-width: 300px;
+
+
+.projects-page-heading {
+   @include heading-mixin;
+}
+
+.project-all-cards-outer-wrapper {
+   background-color: #eff3f8;
+   display: grid;
+   grid-template-columns: repeat(3, $project-card-width); /* Maximum 3 columns */
+   row-gap: 50px;
+   justify-content: space-around;
+   padding: 0 40px;
+
+
+
+   // Sprawdzić czemu pojawił się poziomy pasek przewijania
+
+
+
+   @media (max-width: 1350px) {
+      grid-template-columns: repeat(2, $project-card-width); /* 2 columns for smaller screens */
+   }
+  
+   @media (max-width: 1050px) {
+      grid-template-columns: 1fr; /* 1 column for very small screens */
+   }
+
+
+   .project-card-outer-wrapper {
+      box-shadow: 0 4px 10px rgba(0,0,0,.03),0 0 2px rgba(0,0,0,.06),0 2px 6px rgba(0,0,0,.12)!important;
+      border: 1px solid;
+      border-color: #FAFAFA;
+      border-radius: 6px;
+   }
+}

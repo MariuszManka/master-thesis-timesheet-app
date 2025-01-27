@@ -1,0 +1,77 @@
+@import 'common/styles/theme.scss';
+
+
+.page-navbar-wrapper {
+   grid-area: navbar;
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: $navbar-width;
+   background-color: $main-app-navbar-background;
+   height: 100%;
+   overflow-y: hidden;
+
+   .page-navbar-inner-items-wrapper {
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 100px 0 0 0;
+
+      .active {
+         display: block;
+         background-color: $page-color !important;
+         border-radius: 40px 0 0 40px;
+
+         li {
+            color: $main-app-navbar-background;
+         
+            svg {
+               fill: $main-app-navbar-background !important;
+
+               path {
+                  fill: $main-app-navbar-background !important;
+               }
+            }
+         }
+      }
+
+      .page-navbar-link-item-wrapper {
+         display: block;
+         margin-left: 15px;
+         transition: all .1s ease-in-out;
+      }
+
+      li {
+         display: flex;
+         justify-content: stretch;
+         align-items: center;
+         color: #F1F1F1;
+         text-transform: uppercase;
+         font-size: 1.1em;
+         font-weight: 700;
+         padding: 15px 15px 15px 30px;
+
+         p {
+            margin: 0;
+         }
+
+         svg {
+            width: 50px;
+            height: 40px;
+            margin-right: 20px;
+            fill: #F1F1F1;
+         }
+      }
+
+   }
+
+   .page-navbar-logout-button {
+      position: absolute;
+      bottom: 45px;
+      left: 45px;
+      color: #F1F1F1;
+      font-size: 35px;
+      transform: rotate(180deg);
+      cursor: pointer;
+   }
+}

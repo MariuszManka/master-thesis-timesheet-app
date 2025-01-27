@@ -1,0 +1,78 @@
+//========= COLORS ===========
+$main-app-red-color: #ED1F2D;
+$secondary-app-color: #400123;
+$secondary-app-color-light: #72023e;
+$main-app-navy-color: #010440;
+$main-app-navbar-background: #0D1F2B;
+$main-form-border-color: #B3B3B3;
+
+$page-color: #efeff1;
+
+//========= FONTS ===========
+$font-family: "Poppins", sans-serif;
+
+
+// ============ SIZES =============
+$navbar-width: 300px;
+
+
+
+
+// ======================== MIXINS ========================
+@mixin heading-mixin {
+   $header-height: 35px; // Local variable
+
+   padding: 30px 40px;
+   display: flex;
+   justify-content: start;
+   align-items: center;
+
+   & p {
+      margin: 0 0 0 10px;
+      font-size: 32px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: $main-app-navbar-background;
+      letter-spacing: 1px;
+      line-height: $header-height;
+   }
+
+   & svg {
+      width: $header-height;
+      height: $header-height;
+   }
+}
+
+@mixin outer-page-content-wrapper {
+   padding: 35px 50px;
+   display: flex;
+   flex-direction: column;
+   justify-content: stretch;
+   align-items: stretch;
+   row-gap: 20px;
+}
+
+@mixin page-header-wrapper {
+   $header-height: 45px;
+
+   display: flex;
+   justify-content: flex-start;
+   align-items: center;
+   text-transform: uppercase;
+   letter-spacing: 1px;
+   column-gap: 10px;
+   margin: 0;
+   height: $header-height;
+
+   & h1 {
+     color: $main-app-navbar-background;
+     margin: 0;
+     line-height: $header-height;
+   }
+
+   & svg {
+      height: $header-height;
+      width: $header-height;
+      fill: $secondary-app-color-light;
+   }
+}

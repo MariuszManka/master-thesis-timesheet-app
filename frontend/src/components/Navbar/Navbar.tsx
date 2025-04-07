@@ -14,23 +14,26 @@ import { AppStorage } from 'common/AppStograge'
 import { useSnackbar } from 'notistack'
 import { CustomAxiosErrorResponse } from 'common/HttpClient'
 import { Tooltip } from 'primereact/tooltip'
+import { Divider } from 'primereact/divider'
+import { Avatar } from 'primereact/avatar'
 
 
 
 const Navbar = () => {
    const navigate = useNavigate()
    const { enqueueSnackbar } = useSnackbar()
-   const currentUserRole = useSelector((state: AppState) => state.currentUserState.role)
+   const currentUser = useSelector((state: AppState) => state.currentUserState)
    const sessionStorage = new SessionStorage()
    const appStorage = new AppStorage()
 
-   if (currentUserRole === SystemRoles.DEFAULT) {
+   const {role, user_info: { full_name }} = currentUser
+
+   if (role === SystemRoles.DEFAULT) {
       <Navigate to={AppLinks.login} />
       return null
    }
 
    const handleLogoutUser = async() => {
-
       try {
          await authService.logoutUser()
          sessionStorage.clearSessionStorage()
@@ -48,13 +51,23 @@ const Navbar = () => {
 
    return (
       <nav className='page-navbar-wrapper'>
-         <ul className='page-navbar-inner-items-wrapper'>
+         <div className='page-navbar-logo'>
+            <h1>3Q Code</h1>
+         </div>
+         <ul className='page-navbar-inner-items-outer'>
             {
-               RoleBasedNavbarItems[currentUserRole].map(navbarItem => React.createElement(React.Fragment, { key: navbarItem.key }, navbarItem))
+               RoleBasedNavbarItems[role].map(navbarItem => React.createElement(React.Fragment, { key: navbarItem.key }, navbarItem))
             }
          </ul>
-         <Tooltip target=".page-navbar-logout-button" />
-         <i className='pi pi-sign-out page-navbar-logout-button' onClick={handleLogoutUser} data-pr-tooltip='Wyloguj' data-pr-position="right" data-pr-at="right+10 center"/>
+         <div className='page-navbar-footer-outer'>
+            <div className='page-navbar-footer-avatar-wrapper'>
+               <Avatar image={`https://avatar.iran.liara.run/username?username=${full_name.trim().split(" ").join("+")}&background=f1f1f1&color=010440`} shape='circle'/>
+               <p data-pr-tooltip={full_name} className='page-navbar-footer-avatar-username'>{full_name}</p>
+               <Tooltip target=".page-navbar-footer-avatar-username" />
+            </div>
+            <Tooltip target=".page-navbar-logout-button" />
+            <i className='pi pi-sign-out page-navbar-logout-button' onClick={handleLogoutUser} data-pr-tooltip='Wyloguj' data-pr-position="right" data-pr-at="right+10 center"/>
+         </div>
       </nav>
    )
 }

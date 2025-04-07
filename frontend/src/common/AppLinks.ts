@@ -10,11 +10,13 @@ export const AppLinks = {
    adminPanel: '/panel-administracyjny',
    adminPanelAddUser: '/panel-administracyjny/dodaj-uzytkownika',
    adminPanelAllUsers: '/panel-administracyjny/wszyscy-uzytkownicy',
-   adminPanelAddProject: '/panel-administracyjny/dodaj-projekt',
-   adminPanelEditProject: '/panel-administracyjny/edytuj-projekt',
+   adminPanelAddTask: '/panel-administracyjny/dodaj-zadanie',
+   adminPanelViewAllTasks: '/panel-administracyjny/wszystkie-zadania',
+   adminPanelEditTask: '/panel-administracyjny/edytuj-zadanie',
    
-   // Projekty
-   projects: '/projekty',
+   // Zadania
+   tasks: '/wszystkie-zadania',
+   tasksViewSingleTask: '/zadanie',
 
 
    login: '/login',

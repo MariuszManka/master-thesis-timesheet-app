@@ -1,67 +1,13 @@
 @import '../../../../common/styles/theme.scss';
 
 
-.admin-page-view-all-users-table-wrapper {
-   .p-datatable-header {
-      padding: 0 0 20px 0;
-   }
-
-   // Checkbox w nagłówku
-   & .p-checkbox.p-highlight .p-checkbox-box {
-      background: $main-app-navy-color;
-      border-color: $main-app-navy-color;
-   } 
-
-   & .p-checkbox .p-checkbox-box .p-checkbox-icon {
-      color: #fff;
-   }
-
-
-   // .p-selectable-row:hover {
-   //    background: #fff;
-   // }
-
-   // .p-selectable-row.p-row-odd:hover {
-   //    background: rgba(0, 0, 0, 0.02);
-   // }
-
-   .p-selectable-row.p-highlight {
-      background: rgba(1, 4, 64, 0.9);
-      color: #fff;
-
-      & .pi.pi-check-circle {  //Ikonka "Aktywnego" użytkownika
-         color: #31c445 !important;
-      }
-
-      & .pi.pi-times-circle { //Ikonka "Nieaktywnego" użytkownika
-         color: #c43142 !important;
-      }
-
-      & .p-checkbox.p-highlight .p-checkbox-box {
-         background: #fff;
-         border-color: #fff;
-      } 
-
-      & .p-checkbox .p-checkbox-box .p-checkbox-icon {
-         color: #00010e;
-      }
-   }
-}
-
-.admin-page-delete-user-modal-button.agree-button{
-   background-color: $main-app-navy-color !important;
-   border: 1px solid $main-app-navy-color;
-}
-
-.admin-page-delete-user-modal-button.disagree-button{
-   background-color: #fff !important;
-   color: $main-app-navy-color;
-   border: 1px solid $main-app-navy-color;
-}
-
 .admin-page-view-all-users-full-name-body-wrapper {
    display: flex;
    justify-content: flex-start;
    align-items: center;
    column-gap: 8px;
+
+   & img {   
+      border-radius: 50%;
+   }
 }

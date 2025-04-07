@@ -1,5 +1,3 @@
-
-import base64
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import Column, String, Boolean, ForeignKey, BLOB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -7,7 +5,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from src.DatabaseConnector import Base
 from src.GlobalConfig import settings, AppRoleEnum
+from src.Timesheet.TimesheetModel import TimesheetResponse, Timesheet
 from typing import Optional, List
+from src.Tasks.TasksModels import account_tasks, TasksResponse
 
 
 
@@ -19,6 +19,7 @@ class Accounts(Base):
     active = Column(Boolean, index=True)
     role = Column(String, index=True)
 
+    # RELATIONSHIP
     user_info: Mapped["UserInfo"] = relationship(
         back_populates="user_account",
         uselist=False,  # Ensures a 1:1 relationship
@@ -34,6 +35,20 @@ class Accounts(Base):
     user_addresses: Mapped[List["UserAddresses"]] = relationship(
         back_populates="user_account",
         cascade="all, delete-orphan",  # Ensures related UserAddresses
+    )
+
+    timesheets: Mapped[List["Timesheet"]] = relationship(
+        back_populates="account",
+        cascade="all, delete-orphan",
+    )
+
+    associated_tasks: Mapped[List["Tasks"]] = relationship(
+        secondary=account_tasks, back_populates="associated_users"
+    )
+
+    task_comments: Mapped[List["TaskComments"]] = relationship(
+        back_populates="creator",
+        cascade="all, delete-orphan",
     )
 
     class Config:
@@ -142,9 +157,11 @@ class UserAddressesResponse(BaseModel):
 
 
 class ExtendedAccountsResponse(AccountsResponse):
+    timesheets: Optional[List[TimesheetResponse]] = None
     user_info: Optional[UserInfoResponse] = None
     user_preferences: Optional[UserPreferencesResponse] = None
     user_addresses: Optional[List[UserAddressesResponse]] = None
+    associated_tasks: List[TasksResponse] = []
 
     class Config:
         from_attributes = True
@@ -158,8 +175,4 @@ class Token(BaseModel):
 # ==========================================================================================
 
 class TokenData(BaseModel):
-   email: str or None = None   
-
-
-class DeleteUserResponse(BaseModel):
-    ok: bool
+   email: str or None = None

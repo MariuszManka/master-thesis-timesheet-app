@@ -21,6 +21,7 @@ import { Dialog } from 'primereact/dialog'
 
 
 import './AdminPanelViewAllUsersStyles.scss'
+import 'components/Tables/TablesStyles.scss'
 
 
 const AdminPanelViewAllUsers = () => {
@@ -74,24 +75,30 @@ const AdminPanelViewAllUsers = () => {
 
    const handleOnDeleteSelectedRows = async () => {
       try {
-         for (const selectedUserRow of selectedUserRows) {
-            authService.deleteSelectedUser(selectedUserRow.id)
-            enqueueSnackbar(`Poprawnie usunięto użytkownika ${selectedUserRow.email}`, { variant: 'success', autoHideDuration: 5000 })
+         //TODO MAGISTERKA - OPISAĆ TEN MECHANIZM
+         const results = await Promise.allSettled(
+            selectedUserRows.map(async (selectedUserRow) => {
+               await authService.deleteSelectedUser(selectedUserRow.id)
+               enqueueSnackbar(`Poprawnie usunięto użytkownika ${selectedUserRow.email}`, { variant: 'success', autoHideDuration: 5000 })
+            })
+         )
+   
+         // Check for any failed deletions
+         const failedDeletions = results.filter(result => result.status === "rejected")
+         if (failedDeletions.length > 0) {
+            enqueueSnackbar(`Nie udało się usunąć ${failedDeletions.length} użytkownika(ów).`, { variant: 'error', autoHideDuration: 5000, preventDuplicate: true })
          }
 
          setIsDialogVisible(false)
          setSelectedUserRows([])
 
          const allUsersListFromFetched = await authService.getAllUsersAccounts()
-         console.log("REFRESH: ", allUsersListFromFetched)
          dispatch(setAllUsersList(allUsersListFromFetched))
 
          setIsLoading(false)
       }
       catch (e: any){
-         enqueueSnackbar(`Nie udało się usunąć użytkownika z bazy danych.`, { variant: 'error', autoHideDuration: 5000, preventDuplicate: true })
-         setIsDialogVisible(false)
-         setSelectedUserRows([])
+         console.trace(`Błąd przy usuwaniu użytkowników: ${e}`)
       }
    }
 
@@ -100,7 +107,7 @@ const AdminPanelViewAllUsers = () => {
      return (
          <>
             <div style={{ display: "flex", justifyContent: 'space-between', }}>
-            <Button label="Usuń" icon="pi pi-trash" severity="danger" onClick={() => setIsDialogVisible(true)} />
+            <Button className="delete-action-table-button" label="Usuń" icon="pi pi-trash" severity="danger" onClick={() => setIsDialogVisible(true)} />
                <IconField iconPosition="left">
                   <InputIcon className="pi pi-search" />
                   <InputText value={globalFilterValue} onChange={onGlobalFilterChange} placeholder="Szukaj" />
@@ -131,8 +138,8 @@ const AdminPanelViewAllUsers = () => {
 
    const dialogFooterContent = (
       <div>
-          <Button label="Tak" icon="pi pi-check" onClick={() => handleOnDeleteSelectedRows()} autoFocus className='admin-page-delete-user-modal-button agree-button'/>
-          <Button label="Nie" icon="pi pi-times" onClick={() => setIsDialogVisible(false)} className="admin-page-delete-user-modal-button disagree-button" />
+          <Button label="Tak" icon="pi pi-check" onClick={() => handleOnDeleteSelectedRows()} autoFocus className='app-table-delete-modal-button agree-button'/>
+          <Button label="Nie" icon="pi pi-times" onClick={() => setIsDialogVisible(false)} className="app-table-delete-modal-button disagree-button" />
       </div>
    )
 
@@ -147,13 +154,14 @@ const AdminPanelViewAllUsers = () => {
             </Link>
          </Breadcrumbs>
          <div className="card">
-            <DataTable className='admin-page-view-all-users-table-wrapper'
+            <DataTable className='app-table-outer-wrapper'
                selection={selectedUserRows} onSelectionChange={(e) => setSelectedUserRows(e.value)} selectionMode="multiple" isDataSelectable={isRowSelectable}
                filters={filters} sortField="id" sortOrder={-1}
                dataKey="id" size='normal'
                scrollable scrollHeight="65vh"
                value={allUsersList} loading={isLoading}
                globalFilterFields={['id', 'user_info.full_name', 'user_info.position', 'email', 'role']} header={renderHeader()}
+               emptyMessage="Brak użytkowników spełniających kryteria"
             >
                <Column selectionMode="multiple" headerStyle={{ width: '3rem' }}></Column>
 
@@ -165,7 +173,10 @@ const AdminPanelViewAllUsers = () => {
                <Column field="active" header="Aktywny?" style={{ width: 45 }}  dataType='boolean' body={verifiedColumnBodyTemplate}></Column>
             </DataTable>
           </div>
-          <Dialog header="Potwierdź akcję" visible={isDialogVisible} style={{ width: '35vw' }} onHide={() => setIsDialogVisible(false)} footer={dialogFooterContent}>
+          <Dialog 
+            header="Potwierdź akcję" visible={isDialogVisible} style={{ width: '35vw' }} draggable={false} resizable={false}
+            onHide={() => setIsDialogVisible(false)} footer={dialogFooterContent}
+          >
                Czy na pewno chcesz usunąć użytkowników: <br />
                <b>{selectedUserRows.map(x => x.email).join(', ')}</b>?
           </Dialog>

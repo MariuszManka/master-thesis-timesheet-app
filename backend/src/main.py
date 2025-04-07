@@ -3,6 +3,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from src.Auth import AuthRouter
+from src.Tasks import TasksRouter
+from src.Settings import SettingsRouter
+from src.Timesheet import TimesheetRouter
 from src.GlobalConfig import settings
 from src.DatabaseConnector import Base, engine
 
@@ -18,6 +21,9 @@ Base.metadata.create_all(bind=engine)
 
 # ============== APPLICATION ROUTES DEFINITIONS ==============
 root_router.include_router(AuthRouter.authRouter)
+root_router.include_router(TasksRouter.tasksRouter)
+root_router.include_router(SettingsRouter.settingsRouter)
+root_router.include_router(TimesheetRouter.timesheetRouter)
 # ============================================================
 
 

@@ -4,9 +4,10 @@ from enum import Enum
 
 
 class AppRoleEnum(str, Enum):  # Enum must be compatible with Pydantic
-    admin = "admin"
-    manager = "manager"
-    employee = "employee"  # Replace these with roles in your `settings.USER_ROLES`
+   default = "" 
+   admin = "admin"
+   manager = "manager"
+   employee = "employee"  # Replace these with roles in your `settings.USER_ROLES`
 
 
 class Settings(BaseSettings):
@@ -19,11 +20,22 @@ class Settings(BaseSettings):
 
    ENVIRONMENT: Literal["local", "staging", "production"] = "local"
    TABLE_NAMES: Dict[str, str] = {
+       # AUTH
       "accounts": "accounts",
       "user_info": "user_info",
       "user_preferences": "user_preferences",
       "user_addresses": "user_addresses",
+
+      #TASKS
+      "tasks": "tasks",
+      "account_tasks": "account_tasks",
+      "task_comments": "task_comments",
+
+      #TIMESHEET
+      "timesheet": "timesheet",
    }
+
+   DATABASE_DATE_FORMAT_FOR_FRONT: str = "yyyy-MM-dd"
    
    API_V1_STR: str
    SQL_LITE_DATABASE_URL: str

@@ -1,0 +1,15 @@
+@import '../../common/styles/theme.scss';
+
+.tasks-page-outer-wrapper {
+   @include outer-page-content-wrapper;
+}
+
+.tasks-page-header-wrapper {
+   @include page-header-wrapper;
+}
+
+.tasks-page-content-section-outer-wrapper {
+   display: flex;
+   flex-direction: column;
+   row-gap: 25px;
+}

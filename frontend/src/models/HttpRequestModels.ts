@@ -3,3 +3,6 @@ export interface IAccessTokenResponseModel {
    token_type: string;
    ok: boolean;
 }
+export interface IOperationSuccessfulResponse {
+   ok: boolean;
+}

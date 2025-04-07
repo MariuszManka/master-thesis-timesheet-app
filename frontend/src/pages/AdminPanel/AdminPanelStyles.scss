@@ -36,3 +36,21 @@
 .admin-panel-option {
    color: $main-app-navy-color;
 }
+
+
+.p-panelmenu-header-link {
+   font-size: 25px;
+   padding-left: 20px;
+}
+
+.admin-panel-option-main-option-wrapper {
+   font-size: 20px;
+
+   .p-menuitem-content {
+      padding-left: 33px;
+   }
+
+   .p-menuitem-icon::before  {
+      font-size: 20px;
+   }
+}

@@ -15,6 +15,8 @@ import { setCurrentUserData } from 'store/CurrentUserSlice/CurrentUserSlice'
 import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
 import { useSnackbar } from 'notistack'
 import { CustomAxiosErrorResponse } from 'common/HttpClient'
+import settingsService from 'services/SettingsService/SettingsService'
+import { fetchAllTasksInfoArray, fetchAllUsersNamesArray, fetchCurrentAppConfig } from 'store/ApplicationSlice/ApplicationSlice'
 
 
 
@@ -67,7 +69,18 @@ const LoginPageForm = () => {
          const tokenResponse = await authService.loginUser(userDataFromForm)
          sessionStorage.add(STORAGEKEYS.ACCESS_TOKEN, tokenResponse.access_token)
 
+
+         const currentAppConfig = await settingsService.fetchCurrentAppConfig()
+         const allUsersNamesArray = await settingsService.fetchAllUsersNames()
+
+
+         // TODO - ZASTANOWIĆ SIĘ CZY KONIECZNE
+         // const allTasksInfoArray = await settingsService.fetchAllTasksInfo()
+         // dispatch(fetchAllTasksInfoArray(allTasksInfoArray))
+
          dispatch(setCurrentUserData(tokenResponse.user_data))
+         dispatch(fetchCurrentAppConfig(currentAppConfig))
+         dispatch(fetchAllUsersNamesArray(allUsersNamesArray))
 
          navigate(AppLinks.home)
       }

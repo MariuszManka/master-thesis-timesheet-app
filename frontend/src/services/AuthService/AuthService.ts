@@ -2,6 +2,7 @@ import { AxiosResponse } from 'axios'
 import { HttpClient } from 'common/HttpClient'
 import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
 import { Environment } from 'environment/AppSettings'
+import { IOperationSuccessfulResponse } from 'models/HttpRequestModels'
 import { ISingleUserDataModel, IUserInfoModel, IUserPreferencesModel } from 'store/admin/AdminPanelSlice/AdminPanelSlice'
 
 
@@ -38,10 +39,6 @@ export interface IUpdateCurrentUserData {
    currentUserId: number;
 }
 
-export interface IDeleteSelectedUser {
-   ok: boolean;
-}
-
 export interface IUploadUserAvatarResponse {
    isOk: boolean;
    avatarBase64: string;
@@ -62,13 +59,13 @@ let instance: AuthService
 
 export class AuthService{
     private readonly _client: HttpClient;
-    private readonly _loginUrlPath = "/login";
-    private readonly _logoutUrlPath = "/logout";
-    private readonly _createUserAccountPath = "/create-account";
-    private readonly _getAllUsersAccountsPath = "/get-all-users-list";
-    private readonly _deleteSelectedUserAccountPath = "/delete-user";
-    private readonly _updateCurrentUserAccountPath = "/update-user";
-    private readonly _uploadUserAvatarPath = "/upload-avatar";
+    private readonly _loginUrlPath = "/users/login";
+    private readonly _logoutUrlPath = "/users/logout";
+    private readonly _createUserAccountPath = "/users/create-account";
+    private readonly _getAllUsersAccountsPath = "/users/get-all-users-list";
+    private readonly _deleteSelectedUserAccountPath = "/users/delete-user";
+    private readonly _updateCurrentUserAccountPath = "/users/update-user";
+    private readonly _uploadUserAvatarPath = "/users/upload-avatar";
   
     constructor() {
         if (instance) { //SINGLETON DESIGN PATTERN
@@ -118,9 +115,9 @@ export class AuthService{
       return (await this._client.get<ISingleUserDataModel[]>(this._getAllUsersAccountsPath, true)).data;
    }
 
-   public async deleteSelectedUser(userToDeleteId: number): Promise<IDeleteSelectedUser> {
+   public async deleteSelectedUser(userToDeleteId: number): Promise<IOperationSuccessfulResponse> {
       const userToDeleteUrl = `${this._deleteSelectedUserAccountPath}/${userToDeleteId}`
-      return (await this._client.delete<IDeleteSelectedUser>(userToDeleteUrl, true)).data
+      return (await this._client.delete<IOperationSuccessfulResponse>(userToDeleteUrl, true)).data
    }
 
    public async updateCurrentUser(currentUserUpdatedData: IUpdateCurrentUserData): Promise<ISingleUserDataModel> {

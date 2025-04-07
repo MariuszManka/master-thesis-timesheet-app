@@ -245,8 +245,8 @@ const ProfilPageUserAvatarPanel = (props: IProfilPageUserAvatarPanelProps) => {
          <p style={{ marginBottom: 20 }}>{props.position}</p>
          <Divider />
          <div className='profil-page-content-avatar-panel-user-statistic-wrapper'>
-            <p>Projekty: </p>
-            <p className='profil-page-content-avatar-panel-user-statistic-number'>7</p>
+            <p>Przypisane zadania: </p>
+            <p className='profil-page-content-avatar-panel-user-statistic-number'>{props.assignedTasksNumber}</p>
          </div>
          <Divider />
          <div className='profil-page-content-avatar-panel-user-statistic-wrapper'>
@@ -261,7 +261,7 @@ const ProfilPageUserAvatarPanel = (props: IProfilPageUserAvatarPanelProps) => {
 const ProfilPageContent = () => {
    const currentUserData = useSelector((state: AppState) => state.currentUserState)
 
-   const { user_info } = currentUserData
+   const { user_info, associated_tasks } = currentUserData
 
    return (
       <>
@@ -269,7 +269,13 @@ const ProfilPageContent = () => {
             <Link href={AppLinks.profile} underline="hover" color='inherit'>Profil użytkownika</Link>
          </Breadcrumbs>
          <div className='profil-page-content-inner-wrapper'>
-            <ProfilPageUserAvatarPanel fullName={user_info.full_name} avatar={user_info.avatar} currentUserId={currentUserData.id} position={user_info.position} />
+            <ProfilPageUserAvatarPanel 
+               fullName={user_info.full_name} 
+               avatar={user_info.avatar} 
+               currentUserId={currentUserData.id} 
+               position={user_info.position} 
+               assignedTasksNumber={associated_tasks.length} 
+            />
             <ProfilPageEditUserInfoPanel userData={currentUserData} />
          </div>
       </>

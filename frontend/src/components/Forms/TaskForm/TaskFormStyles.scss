@@ -1,0 +1,56 @@
+@import '../../../common/styles/theme.scss';
+
+.p-calendar-w-btn .p-datepicker-trigger.p-button {
+   background-color: #020772 !important;
+}
+
+#AddTaskDescription {
+   background: #FFF !important;
+   max-height: 290px;
+
+   &.app-page-editor-error-state {
+      border: 1px solid #b00020;
+   }
+}
+
+
+#AddTaskAssignedUserId {
+
+   .p-multiselect-token {
+      background-color: #020772;
+      color: #FFF;
+   }
+}
+
+.app-page-form-multiselect-input-panel {
+   & .p-multiselect-item.p-highlight.p-focus { // Wybrany hover
+      // background: #FFF !important
+   }
+
+   & .p-multiselect-item.p-highlight { // Wybrany
+      // background: #FFF !important;
+   }
+
+   .p-multiselect-item { // Niewybrany
+
+   }
+
+   .p-multiselect-item.p-focus { // Niewybrany hover
+
+   }
+
+   .p-checkbox-box {
+   // background: #020772;
+      // color: #FFF;
+      // border-color: #020772;
+   }
+}
+
+.app-page-form-cancel-button {
+   border: 0px;
+   color: #020772;
+   font-weight: 600;
+   font-size: 14px;
+   letter-spacing: 1px;
+   cursor: pointer;
+}

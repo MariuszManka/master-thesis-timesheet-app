@@ -1,11 +1,5 @@
 import { AppLinks } from 'common/AppLinks'
 import { NavLink } from 'react-router-dom'
-
-import { ReactComponent as  NavbarHomeIcon } from 'assets/icons/navbar-home-icon.svg'
-import { ReactComponent as  NavbarProjectsIcon } from 'assets/icons/navbar-projects-icon.svg'
-import { ReactComponent as  NavbarTimesheetIcon } from 'assets/icons/navbar-timesheet-icon.svg'
-import { ReactComponent as  NavbarTeamIcon } from 'assets/icons/navbar-team-icon.svg'
-import { ReactComponent as  NavbarAdminPanelIcon } from 'assets/icons/navbar-admin-panel.svg'
 import { SystemRoles } from '../globalRoleConfig'
 
 
@@ -25,11 +19,11 @@ const AllNavbarItems = {
          </li>
       </NavLink>
    ),
-   projects: (
-      <NavLink to={AppLinks.projects} className="page-navbar-link-item-wrapper" key={2}>
+   tasks: (
+      <NavLink to={AppLinks.tasks} className="page-navbar-link-item-wrapper" key={2}>
          <li>
             <AssessmentRoundedIcon />
-            <p>Projekty</p>
+            <p>Zadania</p>
          </li>
       </NavLink>
    ),
@@ -70,7 +64,7 @@ const AllNavbarItems = {
 
 export const RoleBasedNavbarItems = {
    [SystemRoles.ADMIN]: [AllNavbarItems.profile, AllNavbarItems.admin],
-   // [SystemRoles.ADMIN]: [AllNavbarItems.home, AllNavbarItems.projects, AllNavbarItems.timesheet, AllNavbarItems.teams],
-   [SystemRoles.MANAGER]: [AllNavbarItems.home, AllNavbarItems.projects, AllNavbarItems.timesheet, AllNavbarItems.teams],
-   [SystemRoles.EMPLOYEE]: [AllNavbarItems.home, AllNavbarItems.projects, AllNavbarItems.timesheet, AllNavbarItems.teams, AllNavbarItems.profile]
+   // [SystemRoles.ADMIN]: [AllNavbarItems.home, AllNavbarItems.tasks, AllNavbarItems.timesheet, AllNavbarItems.teams],
+   [SystemRoles.MANAGER]: [AllNavbarItems.home, AllNavbarItems.tasks, AllNavbarItems.timesheet, AllNavbarItems.teams],
+   [SystemRoles.EMPLOYEE]: [AllNavbarItems.home, AllNavbarItems.tasks, AllNavbarItems.timesheet, AllNavbarItems.teams, AllNavbarItems.profile]
 }

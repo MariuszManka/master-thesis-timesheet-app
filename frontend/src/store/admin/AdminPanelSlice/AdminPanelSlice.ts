@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 
 import { SLICE_KEYS } from '../../SliceKeys'
 import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
+import { ITaskForm } from 'store/TasksSlice/TasksSlice'
 
 
 export interface IUserPreferencesModel {
@@ -30,6 +31,7 @@ export interface ISingleUserDataModel {
    user_info: IUserInfoModel;
    user_preferences: IUserPreferencesModel | null;
    user_addresses: IUserAddressesModel;
+   associated_tasks: ITaskForm[];
 }
 
 export interface IAdminPanelState {

@@ -11,7 +11,8 @@ from typing import List
 
 
 from src.DatabaseConnector import get_database
-from src.Auth.AuthModel import Accounts, UserInDatabase, TokenData, AccountCreate, AccountsResponse, UserInfo, DeleteUserResponse, UserPreferences
+from src.Auth.AuthModel import Accounts, UserInDatabase, TokenData, AccountCreate, AccountsResponse, UserInfo
+from src.GlobalModels import OperationSuccessfulResponse
 from src.GlobalConfig import settings, AppRoleEnum
 
 
@@ -23,7 +24,7 @@ logger = logging.getLogger("uvicorn")
 
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/login", )
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/users/login", )
 token_blacklist = set()
 
 
@@ -191,7 +192,7 @@ def fetch_all_users_list(db: Session, current_user: Accounts):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Nie udało się pobrać listy użytkowników z bazy danych")
 
 
-def delete_user_from_db(user_id: int, db: Session) -> DeleteUserResponse:
+def delete_user_from_db(user_id: int, db: Session) -> OperationSuccessfulResponse:
     """
       Handler usuwający danego użytkownika z bazy danych
     """
@@ -206,7 +207,7 @@ def delete_user_from_db(user_id: int, db: Session) -> DeleteUserResponse:
         db.refresh(user_account_to_delete)
         db.commit()
 
-        return DeleteUserResponse( ok=True )
+        return OperationSuccessfulResponse( ok=True )
     
     except Exception as e:
         db.rollback()

@@ -3,4 +3,5 @@ export interface IProfilPageUserAvatarPanelProps {
    fullName: string;
    position: string;
    currentUserId: number;
+   assignedTasksNumber: number;
 }

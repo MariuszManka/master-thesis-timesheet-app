@@ -1,0 +1,117 @@
+@import '../../common/styles/theme.scss';
+
+
+.app-table-outer-wrapper {
+   background-color: #FFF;
+
+   .p-datatable-header {
+      padding: 0 0 20px 20px;
+      border: 0px;
+   }
+
+   .p-datatable-table {
+      padding: 0 20px 40px 20px;
+   }
+
+   .p-paginator-bottom  {
+      border: 0px;
+   }
+
+   // Checkbox w nagłówku
+   & .p-checkbox.p-highlight .p-checkbox-box {
+      background: $main-app-navy-color;
+      border-color: $main-app-navy-color;
+   } 
+
+   & .p-checkbox .p-checkbox-box .p-checkbox-icon {
+      color: #fff;
+   }
+
+
+
+   // .p-selectable-row:hover {
+   //    background: #fff;
+   // }
+
+   // .p-selectable-row.p-row-odd:hover {
+   //    background: rgba(0, 0, 0, 0.02);
+   // }
+
+   .p-selectable-row.p-highlight {
+      background: rgba(211, 212, 237, .70);
+      color: #00010e;
+
+      & .pi.pi-check-circle {  //Ikonka "Aktywnego" użytkownika
+         color: #31c445 !important;
+      }
+
+      & .pi.pi-times-circle { //Ikonka "Nieaktywnego" użytkownika
+         color: #c43142 !important;
+      }
+
+      & .p-checkbox.p-highlight .p-checkbox-box {
+         background: #fff;
+         border-color: #fff;
+      } 
+
+      & .p-checkbox .p-checkbox-box .p-checkbox-icon {
+         color: #00010e;
+      }
+   }
+}
+
+.app-table-delete-modal-button.agree-button {
+   background-color: $main-app-navy-color !important;
+   border: 1px solid $main-app-navy-color;
+}
+
+.app-table-delete-modal-button.disagree-button{
+   background-color: #fff !important;
+   color: $main-app-navy-color;
+   border: 1px solid $main-app-navy-color;
+}
+
+.p-datatable .p-datatable-tbody > tr {
+   color: #2b2b2b;
+}
+
+
+.delete-action-table-button {
+   display: flex;
+   align-items: center;
+   background: transparent;
+   border: 1px solid #732525;
+   color: #732525;
+   border-radius: 10px;
+   padding: 8px 20px 8px 15px;
+   transition: all .15s ease-in-out;
+
+   & .p-button-icon {
+      margin-bottom: 3px;
+   }
+
+   &:hover {
+      background: #f2d8d8;
+   }
+}
+
+.main-action-table-button {
+   display: flex;
+   align-items: center;
+   background: transparent;
+   border: 1px solid #732525;
+   color: #732525;
+   border-radius: 10px;
+   padding: 8px 20px 8px 15px;
+   transition: all .15s ease-in-out;
+
+   & .p-button-icon {
+      margin-bottom: 3px;
+   }
+
+   &:hover {
+      background: #f2d8d8;
+   }
+}
+
+// background: '', borderColor: '#732525'

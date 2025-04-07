@@ -9,9 +9,10 @@ from typing import List
 
 
 
-from src.Auth.AuthModel import Token, Accounts, AccountsResponse, AccountCreate, ExtendedAccountsResponse, DeleteUserResponse, UserInfo, UserPreferences, UserAddresses
+from src.Auth.AuthModel import Token, Accounts, AccountsResponse, AccountCreate, ExtendedAccountsResponse, UserInfo, UserPreferences, UserAddresses
 from src.Auth.AuthConfig import authenticate_user, create_access_token, get_current_active_user, add_user_to_db, fetch_all_users_list, delete_user_from_db, oauth2_scheme, token_blacklist
 from src.DatabaseConnector import get_database
+from src.GlobalModels import OperationSuccessfulResponse
 
 from src.GlobalConfig import settings, AppRoleEnum
 from sqlalchemy.exc import IntegrityError
@@ -24,32 +25,32 @@ logger = logging.getLogger("uvicorn")
 
 
 
-authRouter = APIRouter()
+authRouter = APIRouter(prefix="/users")
 
 
-
-@authRouter.post("/login", response_model=Token)
+# TODO - WYCIĄGNĄĆ DO OSOBNEGO ROUTERA
+@authRouter.post("/login", response_model=Token, tags=["Login API"])
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_database)):
-   user = authenticate_user(form_data.username, form_data.password, db)
+    user = authenticate_user(form_data.username, form_data.password, db)
 
-   if not user:
-      raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Niepoprawny email lub hasło", headers={ "WWW-Authenticate": "Bearer" })
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Niepoprawny email lub hasło", headers={ "WWW-Authenticate": "Bearer" })
    
 
-   access_token_expires = timedelta(minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-   access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
+    access_token_expires = timedelta(minutes=int(settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
+    user_response = ExtendedAccountsResponse.model_validate(user)                                                
 
-   user_response = ExtendedAccountsResponse.model_validate(user)
-
-   return Token (
-      access_token=access_token,
-      token_type="bearer",
-      ok=True,
-      user_data=user_response,
-   )
+    return Token (
+        access_token=access_token,
+        token_type="bearer",
+        ok=True,
+        user_data=user_response
+    )
 
 
-@authRouter.post("/logout", status_code=status.HTTP_200_OK)
+# TODO - WYCIĄGNĄĆ DO OSOBNEGO ROUTERA
+@authRouter.post("/logout", status_code=status.HTTP_200_OK, tags=["Login API"])
 async def logout(token: str = Depends(oauth2_scheme)):
     """
     Logs out the user by blacklisting their token.
@@ -60,12 +61,9 @@ async def logout(token: str = Depends(oauth2_scheme)):
 
 
 
-#!! TODO - DODAĆ WALIDACJĘ CZY NIE POSIADAMY JUŻ TAKIEGO USERA W BAZIE
-
-@authRouter.post("/create-account", response_model=AccountsResponse)
-async def create_user(account: AccountCreate, db: Session = Depends(get_database)):
+@authRouter.post("/create-account", response_model=AccountsResponse, tags=["Accounts API"])
+async def create_user(account: AccountCreate, db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
    try:
-
       logger.info(account)
       return add_user_to_db(db, account)
      
@@ -77,12 +75,13 @@ async def create_user(account: AccountCreate, db: Session = Depends(get_database
 
 
 
-@authRouter.get("/users/get-current-user/")
+@authRouter.get("/get-current-user/", tags=["Accounts API"])
 async def read_users_me(current_user: Accounts = Depends(get_current_active_user)):
    return current_user
 
 
-@authRouter.get("/get-all-users-list", response_model=List[ExtendedAccountsResponse])
+
+@authRouter.get("/get-all-users-list", response_model=List[ExtendedAccountsResponse], tags=["Accounts API"])
 async def get_all_users_list(db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
    """
       Endpoint zwracający listę obecnie utworzonych w systemie kont użytkowników. 
@@ -90,7 +89,8 @@ async def get_all_users_list(db: Session = Depends(get_database), current_user: 
    return fetch_all_users_list(db, current_user)
 
 
-@authRouter.delete("/delete-user/{user_id}", response_model=DeleteUserResponse)
+
+@authRouter.delete("/delete-user/{user_id}", response_model=OperationSuccessfulResponse, tags=["Accounts API"])
 async def delete_user(user_id: int, db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
     """
     Endpoint usuwający użytkownika o podanym id z bazy danych.
@@ -102,7 +102,9 @@ async def delete_user(user_id: int, db: Session = Depends(get_database), current
     return delete_user_from_db(user_id, db)
 
 
-@authRouter.post("/upload-avatar", status_code=status.HTTP_200_OK)
+
+#TODO - Przenieść do AuthConfig
+@authRouter.post("/upload-avatar", status_code=status.HTTP_200_OK, tags=["Accounts API"])
 async def upload_avatar(id: int = Form(...), avatar: UploadFile = File(...), db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
     """
     Endpoint to upload and save a user's avatar based on the provided account ID.
@@ -139,14 +141,9 @@ async def upload_avatar(id: int = Form(...), avatar: UploadFile = File(...), db:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Nie udało się dodać pliku do bazy danych.")
     
 
-
-@authRouter.patch("/update-user/{user_id}", response_model=ExtendedAccountsResponse)
-async def update_account_generic(
-    user_id: int,
-    updates: dict,
-    db: Session = Depends(get_database),
-    current_user: Accounts = Depends(get_current_active_user),
-):
+#TODO - Przenieść do AuthConfig
+@authRouter.patch("/update-user/{user_id}", response_model=ExtendedAccountsResponse, tags=["Accounts API"])
+async def update_account_generic(user_id: int, updates: dict, db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
     """
     Generic endpoint to update account data dynamically.
     """

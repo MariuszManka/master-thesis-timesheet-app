@@ -8,15 +8,17 @@ import PageLayout from 'components/PageLayout/PageLayout'
 import LoginPage from '../LoginPage/LoginPage'
 import HomePage from 'pages/HomePage/HomePage'
 import { ProtectedRoute } from 'components/ProtectedRoute/ProtectedRoute'
-import ProjectsPage from 'pages/ProjectsPage/ProjectsPage'
+import TasksPage from 'pages/TasksPage/TasksPage'
 import TimesheetPage from 'pages/TimesheetPage/TimesheetPage'
 import TeamsPage from 'pages/TeamsPage/TeamsPage'
 import AdminPanel, { MainAdminPanelView } from 'pages/AdminPanel/AdminPanel'
 import AdminPanelAddUserPage from 'pages/AdminPanel/Subpages/AdminPanelAddUserPage/AdminPanelAddUserPage'
 import AdminPanelViewAllUsers from 'pages/AdminPanel/Subpages/AdminPanelViewAllUsers/AdminPanelViewAllUsers'
 import ProfilePage from 'pages/ProfilePage/ProfilePage'
-import AdminPanelAddProjectPage from 'pages/AdminPanel/Subpages/AdminPanelAddProjectPage/AdminPanelAddProjectPage'
-import AdminPanelEditProjectPage from 'pages/AdminPanel/Subpages/AdminPanelEditProjectPage/AdminPanelEditProjectPage'
+import AdminPanelAddTaskPage from 'pages/AdminPanel/Subpages/AdminPanelAddTaskPage/AdminPanelAddTaskPage'
+import AdminPanelViewAllTaskPage from 'pages/AdminPanel/Subpages/AdminPanelViewAllTasksPage/AdminPanelViewAllTaskPage'
+import AdminPanelEditSingleTaskPage from 'pages/AdminPanel/Subpages/AdminPanelEditSingleTaskPage/AdminPanelEditSingleTaskPage'
+import SingleTaskView from 'components/Views/SingleTaskView/SingleTaskView'
 
 
 
@@ -28,9 +30,9 @@ const AppRoot = () => {
             <Routes>
                <Route path={AppLinks.root} element={<ProtectedRoute><PageLayout /></ProtectedRoute>} >
                   {/* TE KOMPONENTY KTÓRE POTRZEBUJĄ NAVBARA I CAŁEJ RESZTY */}
-
                   <Route path={AppLinks.home} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
-                  <Route path={AppLinks.projects} element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
+                  <Route path={AppLinks.tasks} element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
+                  <Route path={`${AppLinks.tasksViewSingleTask}/:id`} element={<ProtectedRoute><SingleTaskView /></ProtectedRoute>} />
                   <Route path={AppLinks.timesheet} element={<ProtectedRoute><TimesheetPage /></ProtectedRoute>} />
                   <Route path={AppLinks.teams} element={<ProtectedRoute><TeamsPage /></ProtectedRoute>} />
                   <Route path={AppLinks.profile} element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -38,8 +40,9 @@ const AppRoot = () => {
                      <Route index element={<MainAdminPanelView />} />
                      <Route path={AppLinks.adminPanelAddUser} element={<AdminPanelAddUserPage />} />
                      <Route path={AppLinks.adminPanelAllUsers} element={<AdminPanelViewAllUsers />} />
-                     <Route path={AppLinks.adminPanelAddProject} element={<AdminPanelAddProjectPage />} />
-                     <Route path={AppLinks.adminPanelEditProject} element={<AdminPanelEditProjectPage />} />
+                     <Route path={AppLinks.adminPanelViewAllTasks} element={<AdminPanelViewAllTaskPage />} />
+                     <Route path={AppLinks.adminPanelAddTask} element={<AdminPanelAddTaskPage />} />
+                     <Route path={`${AppLinks.adminPanelEditTask}/:id`} element={<AdminPanelEditSingleTaskPage />} />
                   </Route>
                </Route>
                <Route path={AppLinks.login} element={<LoginPage />} />

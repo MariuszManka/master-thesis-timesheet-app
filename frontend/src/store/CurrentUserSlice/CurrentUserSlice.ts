@@ -33,18 +33,19 @@ export const initialCurrentUserState: ICurrentUserState = {
    user_addresses: {
       id: 0,
       street: "",
-   }
+   },
+   associated_tasks: [],
 }
 
 
 
 
 export const currentUserSlice = createSlice({
-   name: SLICE_KEYS.CURRENT_USER_STATE,
+   name: SLICE_KEYS.CURRENT_USER_SLICE,
    initialState: initialCurrentUserState,
    reducers: {
       setCurrentUserData: (state, action: PayloadAction<ISingleUserDataModel>) => {
-         const { id, email, active, role, user_info, user_preferences, user_addresses } = action.payload
+         const { id, email, active, role, user_info, user_preferences, user_addresses, associated_tasks } = action.payload
 
          state.id = id
          state.email = email
@@ -53,6 +54,7 @@ export const currentUserSlice = createSlice({
          state.user_info = user_info
          state.user_preferences = user_preferences
          state.user_addresses = user_addresses
+         state.associated_tasks = associated_tasks
       },
       setNewUserAvatar: (state, action: PayloadAction<string>) => {
          state.user_info.avatar = action.payload

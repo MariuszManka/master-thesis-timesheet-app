@@ -7,7 +7,9 @@ import { AppLinks } from 'common/AppLinks'
 import { Tree, TreeNodeTemplateOptions } from 'primereact/tree'
 
 
-import './AdminPanel.scss'
+import './AdminPanelStyles.scss'
+import { PanelMenu } from 'primereact/panelmenu'
+
 
 
 
@@ -19,7 +21,7 @@ export const MainAdminPanelView = () => {
          label: 'Użytkownicy',
          icon: 'pi pi-fw pi-user',
          className: "admin-panel-option-main-option-wrapper",
-         children: [
+         items: [
              {
                  key: '0-0',
                  label: 'Dodaj użytkownika',
@@ -36,42 +38,32 @@ export const MainAdminPanelView = () => {
       },
       {
          key: '1',
-         label: 'Projekty',
+         label: 'Zadania',
          icon: 'pi pi-fw pi-briefcase',
          className: "admin-panel-option-main-option-wrapper",
-         children: [
+         items: [
              {
                  key: '1-0',
-                 label: 'Dodaj projekt',
+                 label: 'Dodaj zadanie',
                  icon: 'pi pi-fw pi-plus',
-                 url: AppLinks.adminPanelAddProject,
+                 url: AppLinks.adminPanelAddTask,
              },
              {
                  key: '1-1',
-                 label: 'Edytuj projekty',
+                 label: 'Wszystkie zadania',
                  icon: 'pi pi-fw pi-pencil',
-                 url: AppLinks.adminPanelEditProject,
+                 url: AppLinks.adminPanelViewAllTasks,
              }
          ]
       }
    ]
-   const nodeTemplate = (node: any, options: TreeNodeTemplateOptions) => {
-      let label = <span className="admin-panel-option">{node.label}</span>;
-      
-
-      if (node.url) {
-         label = <NavLink to={node.url} className="admin-panel-option">{node.label}</NavLink>;
-      }
-
-      return <span className={options.className}>{label}</span>
-   }
 
    return (
       <>
          <Breadcrumbs aria-label="breadcrumb" style={{ marginLeft: 5, cursor: 'pointer' }}>
             <Link href={AppLinks.adminPanel} underline="hover" color='inherit'>Panel administracyjny</Link>
          </Breadcrumbs>
-         <Tree value={mainAdminPanelOptions} nodeTemplate={nodeTemplate} />
+         <PanelMenu model={mainAdminPanelOptions} multiple />
       </>
    )
 }

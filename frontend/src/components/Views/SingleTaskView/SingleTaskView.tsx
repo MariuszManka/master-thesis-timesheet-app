@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, Card, CardContent, CardHeader, Divider, IconButton, List, ListItem, ListItemAvatar, ListItemText, TextareaAutosize, TextField, Typography } from '@mui/material'
+import { Avatar, Breadcrumbs, Button, Card, CardContent, CardHeader, Divider, IconButton, Link, List, ListItem, ListItemAvatar, ListItemText, TextareaAutosize, TextField, Typography } from '@mui/material'
 import { useDispatch, useSelector } from 'react-redux'
 import { AppState } from 'store'
 
 
 import './SingleTaskViewStyles.scss'
 import { ISingleTaskCommentsProps, ISingleTaskViewDescriptionProps, ISingleTaskViewTaskInfoProps, ISingleTaskViewTaskStatsProps } from './SingleTaskViewProps'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AppLinks } from 'common/AppLinks'
 import tasksService, { ITaskCommentModel, ITaskResponseModel } from 'services/TasksService/TasksService'
 import { DateTime } from 'luxon'
@@ -19,6 +19,9 @@ import { setCurrentSelectedTaskForPreview } from 'store/TasksSlice/TasksSlice'
 import { Dialog } from 'primereact/dialog'
 import { useSnackbar } from 'notistack'
 import SaveIcon from '@mui/icons-material/Save'
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import TaskTimesheetTable from 'components/Tables/TimesheetTable/TaskTimesheetTable/TaskTimesheetTable'
+
 
 
 
@@ -32,7 +35,6 @@ const SingleTaskViewTaskStats = (props: ISingleTaskViewTaskStatsProps) => {
 
    return (
       <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-         <h1>!!!!DODAĆ SEKCJĘ Z KOMENTARZAMI DO ZADANIA!!!!!</h1>
          <div className='single-task-view-task-stats-wrapper'>
             {
                cardsContent.map((singleCard, singleCardId) => (
@@ -77,7 +79,7 @@ const SingleTaskViewTaskInfo = (props: ISingleTaskViewTaskInfoProps) => {
 
 
    return (
-      <Fieldset legend={"Podsumowanie"} toggleable className='single-task-view-task-info-wrapper-inner-wrapper' style={{ borderRadius: 10 }}>
+      <Fieldset legend={"Informacje"} toggleable className='single-task-view-task-info-wrapper-inner-wrapper' style={{ borderRadius: 10 }}>
          <div className='single-task-view-task-info-grid-inner-wrapper'>
             <div className='single-task-view-task-info-grid-item'>
                <h6>Typ zagadnienia:</h6>
@@ -93,7 +95,7 @@ const SingleTaskViewTaskInfo = (props: ISingleTaskViewTaskInfoProps) => {
             </div>
             <div className='single-task-view-task-info-grid-item'>
                <h6>Szacowany czas:</h6>
-               <p>{currentSelectedTask.estimatedHours}</p>
+               <p>{currentSelectedTask.estimatedHours !== null? `${currentSelectedTask.estimatedHours} h` : '---'}</p>
             </div>
             <div className='single-task-view-task-info-grid-item'>
                <h6>Data rozpoczęcia:</h6>
@@ -163,11 +165,11 @@ const SingleTaskViewDescription = (props: ISingleTaskViewDescriptionProps) => {
 }
 
 
-const SingleTaskViewTimesheetTable = () => {
+const SingleTaskViewTimesheetTable = (props: { currentSelectedTaskId: number }) => {
    return (
-      <div className='single-task-view-timesheet-table'>
-
-      </div>
+      <Fieldset legend={"Timesheet"} toggleable className='single-task-view-timesheet-table'>
+         <TaskTimesheetTable currentSelectedTaskId={props.currentSelectedTaskId} />
+      </Fieldset>
    )
 }
 
@@ -197,7 +199,7 @@ const SingleTaskViewComments = ({ currentTaskId, currentUserId }: ISingleTaskCom
       if (currentTaskId) {
          fetchTask()
       }
-   }, [currentTaskComments])
+   }, [currentTaskId])
 
    const deleteSingleComment = async () => {
       if (!commentToDelete) {
@@ -369,32 +371,41 @@ const SingleTaskViewComments = ({ currentTaskId, currentUserId }: ISingleTaskCom
 
 const SingleTaskView = () => {
    const navigate = useNavigate()
+   const { id } = useParams()
+
    const currentSelectedTask = useSelector((state: AppState) => state.tasksState.currentSelectedTaskForPreview)
    const { appDatabaseDateFormatForFront } = useSelector((state: AppState) => state.applicationState)
    const currentUserId = useSelector((state: AppState) => state.currentUserState.id)
+   const { startingDate, dueDate, estimatedHours, descriptionInHTMLFormat } = currentSelectedTask as ITaskResponseModel
    
    if(currentSelectedTask === undefined){
       navigate(AppLinks.tasks)
       return null
    }
-   
-   const { startingDate, dueDate, estimatedHours, descriptionInHTMLFormat } = currentSelectedTask as ITaskResponseModel
+
    
    return (
       <div className='single-task-view-outer-wrapper'>
-         <SingleTaskViewTaskStats startingDate={startingDate} dueDate={dueDate} estimatedHours={estimatedHours} appDatabaseDateFormatForFront={appDatabaseDateFormatForFront} />
-         <SingleTaskViewTaskInfo currentSelectedTask={currentSelectedTask as ITaskResponseModel} appDatabaseDateFormatForFront={appDatabaseDateFormatForFront} />
-         <SingleTaskViewDescription descriptionInHTMLFormat={descriptionInHTMLFormat} />
-         <SingleTaskViewComments currentUserId={currentUserId} currentTaskId={currentSelectedTask.id as number} />
-         <SingleTaskViewTimesheetTable />
+         <header className='tasks-page-header-wrapper'>
+            <TaskAltIcon />
+            <h1>Zadania</h1>
+         </header> 
+         <section className='tasks-page-content-section-outer-wrapper'>
+            <Breadcrumbs aria-label="breadcrumb" style={{ marginLeft: 5, cursor: 'pointer' }}>
+               <Link href={AppLinks.tasks} underline="hover" color='inherit'>Zadania</Link>
+               <Link href={`${AppLinks.tasksViewSingleTask}/${id}`} underline="hover" color='inherit'>Zadanie #{id}</Link>
+            </Breadcrumbs>
+            {/* <SingleTaskViewTaskStats startingDate={startingDate} dueDate={dueDate} estimatedHours={estimatedHours} appDatabaseDateFormatForFront={appDatabaseDateFormatForFront} /> */}
+            <SingleTaskViewTaskInfo currentSelectedTask={currentSelectedTask as ITaskResponseModel} appDatabaseDateFormatForFront={appDatabaseDateFormatForFront} />
+            <SingleTaskViewDescription descriptionInHTMLFormat={descriptionInHTMLFormat} />
+            <SingleTaskViewComments currentUserId={currentUserId} currentTaskId={currentSelectedTask.id as number} />
+            <SingleTaskViewTimesheetTable currentSelectedTaskId={currentSelectedTask.id as number} />
+         </section>
       </div>
    )
 }
 
 export default SingleTaskView
-
-
-
 
 
 

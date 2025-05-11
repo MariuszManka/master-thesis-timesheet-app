@@ -1,5 +1,6 @@
 import logging
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
@@ -7,22 +8,64 @@ from typing import List
 
 from src.Auth.AuthModel import Accounts
 from src.GlobalModels import OperationSuccessfulResponse
-from src.Tasks.TasksModels import Tasks, TaskCreate, TasksResponse, TaskCommentCreate, TaskComments, TaskCommentResponse, TasksCommentUpdate
+from src.GlobalConfig import AppRoleEnum
+from src.Tasks.TasksModels import Tasks, TaskCreate, TasksResponse, TaskCommentCreate
+from src.Tasks.TasksModels import TaskComments, TaskCommentResponse, TasksCommentUpdate, TasksSubjectResponse
 from src.Settings.SettingsModel import AllUsersResponse
+from src.Projects.ProjectsModels import Projects
+from src.Timesheet.TimesheetModel import Timesheet
 
 logger = logging.getLogger("uvicorn")
 
 
-def fetch_all_tasks_list(db: Session, current_user: Accounts, skip: int = 0, limit: int = 10, user_id: int = None, search_query: str = None):
+
+
+# ============================ HELPER FUNCTIONS ============================
+def get_visible_tasks_query(db: Session, current_user: Accounts):
+    """
+    Zwraca zapytanie do bazy zawężone do zadań, które użytkownik powinien widzieć.
+    """
+    if current_user.role == AppRoleEnum.admin:
+        # Admin widzi wszystkie zdania
+        return db.query(Tasks)
+    elif current_user.role == AppRoleEnum.manager:
+        # Manager widzi tylko zadania z projektów, których jest właścicielem
+        return db.query(Tasks).join(Projects).filter(Projects.owner_id == current_user.id)
+    elif current_user.role == AppRoleEnum.employee:
+        # Użytkownik widzi tylko zadania z projektów, w których uczestniczy
+        return (db.query(Tasks).join(Projects).join(Projects.participants).filter(Accounts.id == current_user.id))
+ 
+
+
+# Funkcja pomocnicza do sumowania godzin z Timesheet
+def calculate_total_time_spent(db: Session, task_id: int) -> float:
+    return db.query(func.coalesce(func.sum(Timesheet.timeSpentInHours), 0.0)).filter(Timesheet.assignedTaskId == task_id).scalar()
+
+    
+#===========================================================================
+
+
+
+"""
+    1) Pracownik widzi tylko zadania z projektów, w których uczestniczy
+    2) Manager widzi tylko zadania z projektów, których jest właścicielem
+    3) Administrator widzi wszystkie zadania
+
+    4) Parametr user_id pozwala na pobranie zadań przypisanych do konkretnego użytkownika
+"""
+def fetch_all_tasks_list(db: Session, current_user: Accounts, skip: int = 0, limit: int = 10, user_id: int = None, project_id: int = None, search_query: str = None):
     """
       Handler pozwalający pobrać listę wszystkich zadań z bazy danych
     """
     try:
-        query = db.query(Tasks)
+        query = get_visible_tasks_query(db, current_user)
         tasks_response = []
 
         if user_id:
             query = query.filter(Tasks.associated_users.any(id=user_id))
+
+        if project_id:
+            query = query.filter(Tasks.project_id == project_id)
 
         total_count = query.count()
 
@@ -40,15 +83,19 @@ def fetch_all_tasks_list(db: Session, current_user: Accounts, skip: int = 0, lim
                 if search_term in task.subject.lower()
                 or (search_term.isdigit() and int(search_term) == task.id)
                 or (task.taskType and search_term in task.taskType.lower())
+                or (task.project.name and search_term in task.project.name.lower())
                 or (task.taskStatus and search_term in task.taskStatus.lower())
                 or (task.priority and search_term in task.priority.lower())
             ]
         else:
             filtered_tasks = all_tasks  # No filtering applied
 
+
         for task in filtered_tasks:
+            total_time_spent = calculate_total_time_spent(db, task.id)
             assigned_users = [AllUsersResponse(id=user.id, user=user.user_info.full_name) for user in task.associated_users]
             task_comments = db.query(TaskComments).filter(TaskComments.task_id == task.id).order_by(TaskComments.lastUpdateDateTime.desc()).all()
+
             task_comments = [
                 TaskCommentResponse(
                     **comment.__dict__,
@@ -58,9 +105,21 @@ def fetch_all_tasks_list(db: Session, current_user: Accounts, skip: int = 0, lim
                 for comment in task_comments
             ]
 
-            task_response = TasksResponse(**task.__dict__, assignedUsers=assigned_users, comments=task_comments)
-            tasks_response.append(task_response)
+            parent_task_response = None
+            if task.parent_task:
+                parent_assigned_users = [AllUsersResponse(id=user.id, user=user.user_info.full_name) for user in task.parent_task.associated_users]
+                parent_task_response = TasksResponse(
+                    **task.parent_task.__dict__, assignedUsers=parent_assigned_users, comments=[], parentTask=None,
+                      projectName=task.parent_task.project.name if task.parent_task.project else "",
+                      total_time_spent_in_hours=calculate_total_time_spent(db, task.parent_task.id)
+                )
+            
+            single_task_response = TasksResponse(
+                **task.__dict__, assignedUsers=assigned_users, comments=task_comments, parentTask=parent_task_response,
+                  projectName=task.project.name if task.project else "", total_time_spent_in_hours=total_time_spent
+            )
 
+            tasks_response.append(single_task_response)
 
         return {
             "total": total_count,
@@ -73,17 +132,39 @@ def fetch_all_tasks_list(db: Session, current_user: Accounts, skip: int = 0, lim
 
 
 
+"""
+    1) Pracownik widzi tylko zadania z projektów, w których uczestniczy
+    2) Manager widzi tylko zadania z projektów, których jest właścicielem
+    3) Administrator widzi wszystkie zadania 
+"""
 def fetch_single_task(db: Session, current_user: Accounts, task_id: int):
     """
       Handler pozwalający pobrać listę wszystkich zadań z bazy danych
     """
     try:
-        single_task = db.query(Tasks).filter(Tasks.id == task_id).one_or_none()
+        single_task = (db.query(Tasks).options(joinedload(Tasks.project).joinedload(Projects.participants)).filter(Tasks.id == task_id).one_or_none())
 
         if single_task is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Błąd. Nie znaleziono zadania o podanym id ({task_id}) w bazie.")
-        
 
+        if not single_task.project:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Zadanie o id {task_id} nie ma przypisanego projektu.")
+        
+       
+        # >>> Sprawdzenie uprawnień:
+
+        # Jeśli manager nie jest właścicielem projektu, to nie ma dostępu do zadania 
+        if current_user.role == AppRoleEnum.manager:
+            if single_task.project.owner_id != current_user.id:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Obecny Manager nie ma dostępu do tego zadania.")
+        
+        # Jeśli użytkownik nie jest uczestnikiem projektu, to nie ma dostępu do zadania
+        elif current_user.role == AppRoleEnum.employee: 
+            if current_user not in single_task.project.participants:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Obecny użytkownik ma dostępu do tego zadania.")
+
+        
+        total_time_spent = calculate_total_time_spent(db, single_task.id)
         all_assigned_users = [AllUsersResponse(id=user.id, user=user.user_info.full_name) for user in single_task.associated_users]
         all_task_comments = db.query(TaskComments).filter(TaskComments.task_id == task_id).order_by(TaskComments.lastUpdateDateTime.desc()).all()
         all_task_comments = [
@@ -94,80 +175,150 @@ def fetch_single_task(db: Session, current_user: Accounts, task_id: int):
                 )
                 for comment in all_task_comments
             ]
+        
+        parent_task_response = None
+        if single_task.parent_task:
+            parent_assigned_users = [AllUsersResponse(id=user.id, user=user.user_info.full_name) for user in single_task.parent_task.associated_users]
+            parent_task_response = TasksResponse(
+                **single_task.parent_task.__dict__, assignedUsers=parent_assigned_users, comments=[], parentTask=None,
+                projectName=single_task.parent_task.project.name if single_task.parent_task.project else "",
+                total_time_spent_in_hours=calculate_total_time_spent(db, single_task.parent_task.id)
+            )
 
-        return TasksResponse(**single_task.__dict__, assignedUsers = all_assigned_users, comments=all_task_comments)
+
+        return TasksResponse(
+            **single_task.__dict__, assignedUsers=all_assigned_users, comments=all_task_comments, parentTask=parent_task_response, 
+            projectName=single_task.project.name if single_task.project else "", total_time_spent_in_hours=total_time_spent
+        )
     
 
     except Exception as e:
         logger.error(f"Failed to fetch tasks list: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Nie udało się pobrać listy zadania z bazy danych")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"{e}")
 
 
 
+"""
+    1) Pracownik widzi tylko zadania z projektów, w których uczestniczy
+    2) Manager widzi tylko zadania z projektów, których jest właścicielem
+    3) Administrator widzi wszystkie zadania 
+"""
+def fetch_all_tasks_subjects(db: Session, current_user: Accounts):
+    """
+      Handler pozwalający pobrać listę wszystkich zadań z bazy danych
+    """
+    try:
+        query = query = get_visible_tasks_query(db, current_user)
+        all_tasks = query.order_by(Tasks.id).all()
 
-
-def add_task_to_db(db: Session, task: TaskCreate):
-   try:
+        return [
+            TasksSubjectResponse(
+                id=task.id,
+                subject=task.subject,
+                createdDate=task.createdDate,
+                associatedUserIds=[user.id for user in task.associated_users]
+            )
+            for task in all_tasks
+        ]
     
-    if task.parentTaskId:
-        parent_task = db.query(Tasks).filter(Tasks.id == task.parentTaskId).first()
-        if not parent_task:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Zagadnienie nadrzędne o podanym id: {task.parentTaskId} nie istnieje.")
+    except Exception as e:
+        logger.error(f"Failed to fetch tasks list: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Nie udało się pobrać nazw zadań z bazy danych")
 
 
-    task_data = task.model_dump(exclude={"associated_user_ids"})
-    new_task = Tasks(**task_data)
 
-    users = [] 
+"""
+    1) Pracownik nie ma uprawnień do dodania zadania
+    2) Manager ma uprawnienia do dodania zadania, ale tylko do projektów, których jest właścicielem
+    3) Administrator ma uprawnienia do dodania zadań do każdego z projektów 
+"""
+def add_task_to_db(db: Session, task: TaskCreate, current_user: Accounts):
+    try:
+        # Sprawdzenie uprawnień dla użytkownika
+        if current_user.role == AppRoleEnum.employee:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Obecny użytkownik nie ma uprawnień do dodania zadania.")
 
-    if task.associated_user_ids:
-        users = db.query(Accounts).filter(Accounts.id.in_(task.associated_user_ids)).all()
+        # Sprawdzenie czy projekt istnieje w bazie
+        project = db.query(Projects).filter(Projects.id == task.project_id).first()
+        if not project:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Nie można dodać zadania. Projekt o id {task.project_id} nie istnieje w bazie danych")
 
-        if not users:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Podani użytkownicy nie istnieją w bazie danych.")
+        # Sprawdzenie uprawnień dla managera
+        if current_user.role == AppRoleEnum.manager and project.owner_id != current_user.id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Nie można dodać zadania. Obecny użytkownik nie jest właścicielem projektu do którego próbuje dodać zadanie.")
 
-        new_task.associated_users = users
-
-
-    assigned_users = [AllUsersResponse(id=user.id, user=user.user_info.full_name if user.user_info else "") for user in users]
-    new_task.createdDate = datetime.today()
-    
-    db.add(new_task)
-    db.commit()
-    db.refresh(new_task)
+        # Jeśli podano zadanie nadrzędne, sprawdzamy czy istnieje w bazie
+        if task.parentTaskId:
+            parent_task = db.query(Tasks).filter(Tasks.id == task.parentTaskId).first()
+            if not parent_task:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Zagadnienie nadrzędne o podanym id: {task.parentTaskId} nie istnieje.")
 
 
-  # TODO - zastanowić się czy trzeba zwracać pełne info czy isOk = True wystarczy
-    return TasksResponse (
-        id = new_task.id,
-        subject = new_task.subject,
-        description = new_task.description,
-        descriptionInHTMLFormat = new_task.descriptionInHTMLFormat,
-        taskType = new_task.taskType,
-        taskStatus = new_task.taskStatus,
-        priority = new_task.priority,
-        startingDate = new_task.startingDate,
-        dueDate = new_task.dueDate,
-        createdDate=new_task.createdDate,
-        estimatedHours = new_task.estimatedHours,
-        parentTaskId = new_task.parentTaskId,
-        assignedUsers=assigned_users
-    )
-   
-   except IntegrityError:
-      db.rollback()
-      logger.error(f"Zadanie o podanym id już istnieje w bazie danych")
-      raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Zadanie o podanym id już istnieje w bazie danych")
-   
-    
-   except Exception as e:
+        task_data = task.model_dump(exclude={"assignedUsers"})
+        new_task = Tasks(**task_data)
+
+        users = [] 
+
+        if task.assignedUsers:
+            users = db.query(Accounts).filter(Accounts.id.in_(task.assignedUsers)).all()
+
+            if not users:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Podani użytkownicy nie istnieją w bazie danych.")
+
+            new_task.associated_users = users
+
+
+        assigned_users = [AllUsersResponse(id=user.id, user=user.user_info.full_name if user.user_info else "") for user in users]
+        new_task.createdDate = datetime.today()
+        new_task.creatorFullName = current_user.user_info.full_name if current_user.user_info else ""
+
+        db.add(new_task)
+        db.commit()
+        db.refresh(new_task)
+
+        total_time_spent = calculate_total_time_spent(db, new_task.id)
+
+        # TODO - zastanowić się czy trzeba zwracać pełne info czy isOk = True wystarczy
+        return TasksResponse (
+            id = new_task.id,
+            subject = new_task.subject,
+            description = new_task.description,
+            descriptionInHTMLFormat = new_task.descriptionInHTMLFormat,
+            taskType = new_task.taskType,
+            taskStatus = new_task.taskStatus,
+            priority = new_task.priority,
+            startingDate = new_task.startingDate,
+            dueDate = new_task.dueDate,
+            createdDate=new_task.createdDate,
+            estimatedHours = new_task.estimatedHours,
+            parentTaskId = new_task.parentTaskId,
+            assignedUsers=assigned_users,
+            creatorFullName=new_task.creatorFullName,
+            parentTask=new_task.parent_task,
+            project_id=new_task.project_id,
+            projectName=new_task.project.name if new_task.project else "",
+            total_time_spent_in_hours=total_time_spent
+        )
+
+    except IntegrityError:
+        db.rollback()
+        logger.error(f"Zadanie o podanym id już istnieje w bazie danych")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Zadanie o podanym id już istnieje w bazie danych")
+
+
+    except Exception as e:
         db.rollback()
         logger.error(f"Błąd podczas dodawania zadania do bazy danych: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Błąd podczas dodawania zadania do bazy danych: {e}")
 
 
 
-def delete_task_from_db(task_to_delete_id: int, db: Session) -> OperationSuccessfulResponse:
+"""
+    1) Pracownik nie ma uprawnień do usunięcia zadania
+    2) Manager nie ma uprawnień do usunięcia zadania, które nie należy do jego projektu
+    3) Administrator ma uprawnienia do usunięcia wszystkich zadań 
+"""
+def delete_task_from_db(task_to_delete_id: int, db: Session, current_user: Accounts) -> OperationSuccessfulResponse:
     """
       Handler usuwający dany projekt z bazy danych
     """
@@ -176,6 +327,15 @@ def delete_task_from_db(task_to_delete_id: int, db: Session) -> OperationSuccess
 
         if not task_to_delete:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Nie znaleziono takiego zadania w bazie danych.")
+
+
+        if current_user.role == AppRoleEnum.employee:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Obecny użytkownik nie ma uprawnień do usunięcia zadania.")
+
+        elif current_user.role == AppRoleEnum.manager and task_to_delete.project.owner_id != current_user.id:
+            if task_to_delete.project.owner_id != current_user.id:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Obecny użytkownik nie jest właścicielem projektu do którego należy zdanie, nie może go usunąć.")
+
 
         # Delete the user
         db.delete(task_to_delete)
@@ -190,12 +350,34 @@ def delete_task_from_db(task_to_delete_id: int, db: Session) -> OperationSuccess
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Nie udało się usunąć zadania z bazy danych. {e}")
     
 
-def update_selected_task(task_id: int, updates: dict, db: Session):
+
+"""
+    1) Pracownik ma prawo do aktualizacji zadania, ale tylko w przypadku gdy jest do niego przypisany
+    2) Manager ma prawo do aktualizacji wszystkich zadań, z projektów, których jest właścicielem
+    3) Administrator ma uprawnienia do aktualizacji wszystkich zadań 
+"""
+def update_selected_task(task_id: int, updates: dict, db: Session, current_user: Accounts):
     try:
-      task_to_update = db.query(Tasks).filter(Tasks.id == task_id).first()
+      task_to_update = (db.query(Tasks).options(joinedload(Tasks.project)).filter(Tasks.id == task_id).first())
 
       if not task_to_update:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nie znaleziono zadania o podanym 'id' w bazie danych.")
+
+
+      if not task_to_update.project:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Zadanie nie ma przypisanego projektu lub projekt został usunięty.")
+
+      #  >>> Sprawdzenie uprawnień:
+      if current_user.role == AppRoleEnum.manager and task_to_update.project.owner_id != current_user.id:
+         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Obecny użytkownik nie ma uprawnień do aktualizacji zadania z projektu, którego nie jest właścicielem")
+      
+      elif current_user.role == AppRoleEnum.employee:
+        is_user_assigned = any(user.id == current_user.id for user in task_to_update.associated_users)
+
+        if not is_user_assigned:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Obecny użytkownik nie ma uprawnień do aktualizacji zadania, do którego nie jest przypisany.")
+
+
 
       # Convert date strings to datetime.date objects
       date_fields = ["startingDate", "dueDate"]
@@ -216,7 +398,7 @@ def update_selected_task(task_id: int, updates: dict, db: Session):
         users = db.query(Accounts).filter(Accounts.id.in_(assigned_user_ids)).all()
 
         if len(users) != len(assigned_user_ids):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Some users do not exist in the database.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Błąd dodawania zadania! Niektórzy użytkownicy nie istnieją w bazie danych.")
 
         task_to_update.associated_users = users
 
@@ -226,31 +408,61 @@ def update_selected_task(task_id: int, updates: dict, db: Session):
       db.commit()
       db.refresh(task_to_update)
 
-      return TasksResponse.model_validate(task_to_update)
-    
+
+      parent_task_response = None
+      if task_to_update.parent_task:
+        parent_assigned_users = [AllUsersResponse(id=user.id, user=user.user_info.full_name) for user in task_to_update.parent_task.associated_users]
+        parent_task_response = TasksResponse(
+            **task_to_update.parent_task.__dict__, assignedUsers=parent_assigned_users, comments=[], parentTask=None,
+            projectName=task_to_update.parent_task.project.name if task_to_update.parent_task.project else "",
+            total_time_spent_in_hours=calculate_total_time_spent(db, task_to_update.parent_task.id)
+        )
+
+      assigned_users = [AllUsersResponse(id=user.id, user=user.user_info.full_name) for user in task_to_update.associated_users]
+      total_time_spent = calculate_total_time_spent(db, task_to_update.id)
+
+      task_response = TasksResponse(
+        **task_to_update.__dict__,
+        assignedUsers=assigned_users,
+        parentTask=parent_task_response,
+        projectName=task_to_update.project.name if task_to_update.project else "",
+        total_time_spent_in_hours=total_time_spent,
+      )
+        
+
+      return task_response
+
 
     except Exception as e:
         db.rollback()
         logger.error(f"Error updating task: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Błąd: {e}. Nie udało się zaktualizować zadania.")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Nie udało się zaktualizować zadania. {e}")
     
 
 
-def fetch_assigned_tasks(db: Session, current_user: Accounts) -> List[TasksResponse]:
-    """
-    Pobiera zadania przypisane do użytkownika na podstawie relacji associated_tasks.
-    """
-    try:
-        user_with_tasks = db.query(Accounts).filter(Accounts.id == current_user.id).first()
 
-        if not user_with_tasks:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Użytkownik nie znaleziony.")
 
-        return [TasksResponse.model_validate(task) for task in user_with_tasks.associated_tasks]
 
-    except Exception as e:
-        logger.error(f"Nie udało się pobrać przypisanych zadań: {e}")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Błąd serwera: nie udało się pobrać zadań.")
+
+# def fetch_assigned_tasks(db: Session, current_user: Accounts) -> List[TasksResponse]:
+#     """
+#     Pobiera zadania przypisane do użytkownika na podstawie relacji associated_tasks.
+#     """
+#     try:
+#         user_with_tasks = db.query(Accounts).filter(Accounts.id == current_user.id).first()
+
+#         if not user_with_tasks:
+#             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Użytkownik nie znaleziony.")
+
+        
+#         return [TasksResponse.model_validate({ **task.__dict__, 'parentTask': task.parent_task }) for task in user_with_tasks.associated_tasks]
+    
+#     except Exception as e:
+#         logger.error(f"Nie udało się pobrać przypisanych zadań: {e}")
+#         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Błąd serwera: nie udało się pobrać zadań.")
+
+
+
 
 
 

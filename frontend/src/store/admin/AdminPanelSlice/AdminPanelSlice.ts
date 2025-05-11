@@ -10,9 +10,19 @@ export interface IUserPreferencesModel {
    theme: string
 }
 
+export interface IUserAddressesFormDataModel {
+   formal: IUserAddressesModel;
+   correspondence: IUserAddressesModel;
+}
+
 export interface IUserAddressesModel {
    id: number;
+   address_type: "Formalny" | "Korespondencyjny";
    street: string;
+   city: string;
+   postal_code: string;
+   house_number: string;
+   flat_number: string;
 }
 
 export interface IUserInfoModel {
@@ -30,7 +40,7 @@ export interface ISingleUserDataModel {
    role: SystemRoles;
    user_info: IUserInfoModel;
    user_preferences: IUserPreferencesModel | null;
-   user_addresses: IUserAddressesModel;
+   user_addresses: IUserAddressesModel[];
    associated_tasks: ITaskForm[];
 }
 
@@ -41,7 +51,6 @@ export interface IAdminPanelState {
 export const initialAdminPanelState: IAdminPanelState = {
    allUsersList: []
 }
-
 
 
 export const adminPanelSlice = createSlice({

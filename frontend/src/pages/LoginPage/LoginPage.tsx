@@ -16,7 +16,8 @@ import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
 import { useSnackbar } from 'notistack'
 import { CustomAxiosErrorResponse } from 'common/HttpClient'
 import settingsService from 'services/SettingsService/SettingsService'
-import { fetchAllTasksInfoArray, fetchAllUsersNamesArray, fetchCurrentAppConfig } from 'store/ApplicationSlice/ApplicationSlice'
+import { fetchAllProjectsSubjects, fetchAllTasksInfoArray, fetchAllUsersNamesArray, fetchCurrentAppConfig } from 'store/ApplicationSlice/ApplicationSlice'
+import projectsService from 'services/ProjectsService/ProjectsService'
 
 
 
@@ -73,16 +74,21 @@ const LoginPageForm = () => {
          const currentAppConfig = await settingsService.fetchCurrentAppConfig()
          const allUsersNamesArray = await settingsService.fetchAllUsersNames()
 
+         const allProjectsSubjects = await projectsService.fetchAllProjectsSubjectsList()
+
 
          // TODO - ZASTANOWIĆ SIĘ CZY KONIECZNE
-         // const allTasksInfoArray = await settingsService.fetchAllTasksInfo()
-         // dispatch(fetchAllTasksInfoArray(allTasksInfoArray))
+         const allTasksInfoArray = await settingsService.fetchAllTasksInfo()
+         dispatch(fetchAllTasksInfoArray(allTasksInfoArray))
 
          dispatch(setCurrentUserData(tokenResponse.user_data))
          dispatch(fetchCurrentAppConfig(currentAppConfig))
          dispatch(fetchAllUsersNamesArray(allUsersNamesArray))
+         dispatch(fetchAllProjectsSubjects(allProjectsSubjects))
+   
+      
 
-         navigate(AppLinks.home)
+         navigate(AppLinks.projects)
       }
       catch(error: any) {
          if(error instanceof CustomAxiosErrorResponse){

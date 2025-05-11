@@ -1,11 +1,12 @@
 import { HttpClient } from 'common/HttpClient'
 import { IOperationSuccessfulResponse } from 'models/HttpRequestModels'
 import { IAllUsersNamesResponse } from 'services/SettingsService/SettingsService'
-import { ITimesheetResponseModel } from 'services/TimesheetService/TimesheetService'
+import { ITimesheetInTaskModel } from 'services/TimesheetService/TimesheetService'
 
 
 // ========================================== INTERFACES ==========================================
    export interface ICreateTaskData {
+      project_id: number;
       subject: string;
       description: string;
       descriptionInHTMLFormat: string;
@@ -32,9 +33,12 @@ import { ITimesheetResponseModel } from 'services/TimesheetService/TimesheetServ
 
    export interface ITaskResponseModel {
       id: number;
+      project_id: number;
+      projectName: string | null;
       subject: string;
       description: string;
       descriptionInHTMLFormat: string;
+      total_time_spent_in_hours?: number;
       taskType?: string;
       taskStatus?: string;
       priority?: string;
@@ -42,9 +46,16 @@ import { ITimesheetResponseModel } from 'services/TimesheetService/TimesheetServ
       dueDate?: string;
       estimatedHours?: number;
       parentTaskId?: number;
-      timesheets?: ITimesheetResponseModel[];
+      parentTask?: ITaskResponseModel | null;
+      timesheets?: ITimesheetInTaskModel[];
       assignedUsers: IAllUsersNamesResponse[];
       comments: ITaskCommentModel[];
+   }
+
+   export interface IAllTasksSubjectModel {
+      id: number;
+      subject: string;
+      associatedUserIds: number[];
    }
 
    export interface IUpdateCurrentTaskData {
@@ -76,6 +87,7 @@ export class TasksService {
     private readonly _createTaskUrlPath = "/tasks/create-task"
     private readonly _deleteSelectedTaskPath = "/tasks/delete-task";
     private readonly _updateSelectedTaskPath = "/tasks/update-task";
+    private readonly _fetchAllTasksSubjectsPath = "/tasks/get-all-tasks-subjects";
 
     // ========================== TASK COMMENTS ===========================
       private readonly _addSingleTaskCommentUrlPath = "/tasks/add-comment"
@@ -93,7 +105,7 @@ export class TasksService {
         this._client = new HttpClient();
     }
 
-   public async createTask(createTaskData: ICreateTaskData): Promise<any> { // TODO - POPRAWIĆ ZWRACANY TYP
+   public async createTask(createTaskData: ICreateTaskData): Promise<any> { // TODO - POPRAWIĆ ZWRACANY TYP      
       return (await this._client.post<any, ICreateTaskData>(
         this._createTaskUrlPath, 
         createTaskData,
@@ -101,13 +113,14 @@ export class TasksService {
       )).data;
    }
 
-   public async fetchAllTasksList(offset: number, limit: number, user_id?: number, filter?: string): Promise<{ total: number; tasks: ITaskResponseModel[] }> {
+   public async fetchAllTasksList(offset: number, limit: number, user_id?: number, project_id?: number, filter?: string): Promise<{ total: number; tasks: ITaskResponseModel[] }> {
       const linkSearchParams = new URLSearchParams({
          limit: limit.toString(),
          offset: offset.toString()
       })
 
       user_id !== undefined && linkSearchParams.append("user_id", user_id.toString())
+      project_id !== undefined && linkSearchParams.append("project_id", project_id.toString())
       filter !== undefined && linkSearchParams.append("search_query", filter.toString())
       
       return (await this._client.get<{ total: number; tasks: ITaskResponseModel[] }>(
@@ -115,6 +128,14 @@ export class TasksService {
           true
       )).data
   }
+
+  public async fetchAllTasksSubjectsList(): Promise<IAllTasksSubjectModel[]> {
+      return (await this._client.get<IAllTasksSubjectModel[]>(
+         this._fetchAllTasksSubjectsPath,
+         true
+      )).data
+   }
+
 
    public async fetchSingleTaskById(taskId: number): Promise<ITaskResponseModel> {
       const linkSearchParams = new URLSearchParams({ task_id: taskId.toString() })
@@ -130,11 +151,10 @@ export class TasksService {
       return (await this._client.delete<IOperationSuccessfulResponse>(userToDeleteUrl, true)).data
    }
 
-   public async updateSelectedTask(currentUserUpdatedData: IUpdateCurrentTaskData): Promise<ITaskResponseModel> {
+   public async updateSelectedTask(currentUserUpdatedData: IUpdateCurrentTaskData): Promise<any> {
       const { currentTaskId, updatedTaskData } = currentUserUpdatedData
-
       const updateCurrentUserUrl = `${this._updateSelectedTaskPath}/${currentTaskId}`
-      
+
       return (await this._client.patch<ITaskResponseModel, ICreateTaskData>(
          updateCurrentUserUrl, 
          updatedTaskData,

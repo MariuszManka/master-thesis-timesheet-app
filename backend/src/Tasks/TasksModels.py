@@ -18,6 +18,7 @@ class AppTaskTypes(str, Enum):
     issue = "Błąd"
     meeting = "Spotkanie"
     support = "Wsparcie"
+    test = "Testy"
 
 
 class AppTaskStatuses(str, Enum):
@@ -62,6 +63,7 @@ class Tasks(Base):
     lastUpdateDateTime = Column(DateTime, index=True, nullable=True)
     dueDate = Column(Date, index=True, nullable=True)
     estimatedHours = Column(Double, nullable=True)
+    creatorFullName = Column(String, index=True, nullable=False)
 
 
     # RELATIONSHIPS
@@ -71,6 +73,11 @@ class Tasks(Base):
     timesheets = relationship("Timesheet", back_populates="assigned_task", cascade="all, delete-orphan")
     associated_users: Mapped[List["Accounts"]] = relationship(secondary=account_tasks, back_populates="associated_tasks")
     comments: Mapped[List["TaskComments"]] = relationship(back_populates="task", cascade="all, delete-orphan")
+
+    project_id: Mapped[int] = mapped_column(ForeignKey(f"{settings.TABLE_NAMES['projects']}.id"), nullable=False)
+    project: Mapped["Projects"] = relationship(back_populates="tasks")
+
+
 
     class Config:
         orm_mode = True
@@ -94,7 +101,10 @@ class TasksResponse(BaseModel):
     id: int
     subject: str
     description: str
+    project_id: Optional[int] = None
+    projectName: Optional[str] = None
     descriptionInHTMLFormat: str
+    creatorFullName: str
     taskType: Optional[AppTaskTypes] = next(iter(AppTaskTypes))
     taskStatus: Optional[AppTaskStatuses] = next(iter(AppTaskStatuses))
     priority: Optional[AppTaskPriority] = next(iter(AppTaskPriority))
@@ -104,17 +114,24 @@ class TasksResponse(BaseModel):
     lastUpdateDateTime: Optional[datetime] = None
     estimatedHours: Optional[float] = None
     parentTaskId: Optional[int] = None
+    parentTask: Optional["TasksResponse"] = None
+    total_time_spent_in_hours: Optional[float] = 0
 
     timesheets: List[TimesheetResponse] = []
 
     assignedUsers: Optional[List["AllUsersResponse"]] = None  # string-based forward reference
     comments: List[TaskCommentResponse] = []
 
-
-
     class Config:
         from_attributes = True
 
+class TasksSubjectResponse(BaseModel):
+    id: int
+    subject: str
+    createdDate: date
+    associatedUserIds: List[int] = []
+    class Config:
+         from_attributes = True
 
 
 class TaskInDatabase(Tasks):
@@ -128,6 +145,7 @@ class TaskCreate(BaseModel):
     subject: str
     description: str
     descriptionInHTMLFormat: str
+    project_id: int
     taskType: Optional[AppTaskTypes] = next(iter(AppTaskTypes))
     taskStatus: Optional[AppTaskStatuses] = next(iter(AppTaskStatuses))
     priority: Optional[AppTaskPriority] = next(iter(AppTaskPriority))
@@ -135,7 +153,7 @@ class TaskCreate(BaseModel):
     dueDate: Optional[date] = None
     estimatedHours: Optional[float] = None
     parentTaskId: Optional[int] = None
-    associated_user_ids: Optional[List[int]] = None
+    assignedUsers: Optional[List[int]] = None
 
 
 

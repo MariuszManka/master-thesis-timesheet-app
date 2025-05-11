@@ -17,7 +17,7 @@ $menu-right-margin: 20px;
    overflow-y: hidden;
    display: grid;
    grid-template-columns: 100%;
-   grid-template-rows: 100px 1fr 80px;
+   grid-template-rows: min-content 1fr 80px;
 
    .page-navbar-logo {
       font-size: 30px;
@@ -31,6 +31,11 @@ $menu-right-margin: 20px;
 
       & h1 {
          margin: 0;
+      }
+
+      & svg {
+         width: 65%;
+         margin: 0 auto;
       }
    }
 

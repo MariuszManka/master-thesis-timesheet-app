@@ -9,8 +9,10 @@ from typing import List
 
 
 
-from src.Auth.AuthModel import Token, Accounts, AccountsResponse, AccountCreate, ExtendedAccountsResponse, UserInfo, UserPreferences, UserAddresses
-from src.Auth.AuthConfig import authenticate_user, create_access_token, get_current_active_user, add_user_to_db, fetch_all_users_list, delete_user_from_db, oauth2_scheme, token_blacklist
+from src.Auth.AuthModel import Token, Accounts, AccountsResponse, AccountCreate
+from src.Auth.AuthModel import ExtendedAccountsResponse, UserInfo, UserPreferences, UserAddresses, UserAddressesResponse, UserAddressesUpdateData
+from src.Auth.AuthConfig import authenticate_user, create_access_token, get_current_active_user, add_user_to_db
+from src.Auth.AuthConfig import fetch_all_users_list, delete_user_from_db, oauth2_scheme, token_blacklist, update_user_address
 from src.DatabaseConnector import get_database
 from src.GlobalModels import OperationSuccessfulResponse
 
@@ -211,3 +213,19 @@ async def update_account_generic(user_id: int, updates: dict, db: Session = Depe
         logger.error(f"Error updating account: {e}")
 
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Błąd: {e}. Nie udało się zaktualizować danych użytkownika.")
+    
+
+@authRouter.patch("/update-user-address", response_model=List[UserAddressesResponse], tags=["Accounts API"])
+async def perform_update_user_address(updates: UserAddressesUpdateData, db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
+   """
+    Generic endpoint to update account data dynamically.
+   """
+   try:
+        return update_user_address(updates, db, current_user)
+
+   except Exception as e:
+      db.rollback()
+      logger.info(f">>>> Unexpected error occurred: {e}")
+      raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.__str__()) 
+    
+

@@ -33,6 +33,14 @@ export enum profileFieldsNames {
    ACTIVE = 'profileActiveField',
 }
 
+export enum addressesFieldsNames {
+   CITY = 'profileCityField',
+   STREET = 'profileStreetField',
+   POSTAL_CODE = 'profilePostalCodeField',
+   HOUSE_NUMBER = 'profileHouseNumberField',
+   FLAT_NUMBER = 'profileFlatNumberField',
+}
+
 export const profileFieldsEditPrivilegesByRole = {
    [SystemRoles.ADMIN]: [profileFieldsNames.EMAIL, profileFieldsNames.FULL_NAME, profileFieldsNames.PHONE, profileFieldsNames.POSITION, profileFieldsNames.ACTIVE],
    [SystemRoles.MANAGER]: [profileFieldsNames.EMAIL, profileFieldsNames.FULL_NAME, profileFieldsNames.PHONE],

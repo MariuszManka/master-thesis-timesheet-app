@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux'
 import { AppState } from 'store'
 
 import './NavbarStyles.scss';
+import { ReactComponent as PageLogo } from '../../assets/logo_v2.svg'
 import { RoleBasedNavbarItems } from 'common/roleConfig/NavbarRoleConfig/NavbarRoleConfig'
 import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
 import authService from 'services/AuthService/AuthService'
@@ -52,7 +53,8 @@ const Navbar = () => {
    return (
       <nav className='page-navbar-wrapper'>
          <div className='page-navbar-logo'>
-            <h1>3Q Code</h1>
+            {/* <h1>3Q Code</h1> */}
+            <PageLogo />
          </div>
          <ul className='page-navbar-inner-items-outer'>
             {

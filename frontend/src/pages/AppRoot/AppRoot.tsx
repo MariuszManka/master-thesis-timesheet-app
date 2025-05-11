@@ -10,7 +10,7 @@ import HomePage from 'pages/HomePage/HomePage'
 import { ProtectedRoute } from 'components/ProtectedRoute/ProtectedRoute'
 import TasksPage from 'pages/TasksPage/TasksPage'
 import TimesheetPage from 'pages/TimesheetPage/TimesheetPage'
-import TeamsPage from 'pages/TeamsPage/TeamsPage'
+import ProjectsPage from 'pages/ProjectsPage/ProjectsPage'
 import AdminPanel, { MainAdminPanelView } from 'pages/AdminPanel/AdminPanel'
 import AdminPanelAddUserPage from 'pages/AdminPanel/Subpages/AdminPanelAddUserPage/AdminPanelAddUserPage'
 import AdminPanelViewAllUsers from 'pages/AdminPanel/Subpages/AdminPanelViewAllUsers/AdminPanelViewAllUsers'
@@ -19,6 +19,7 @@ import AdminPanelAddTaskPage from 'pages/AdminPanel/Subpages/AdminPanelAddTaskPa
 import AdminPanelViewAllTaskPage from 'pages/AdminPanel/Subpages/AdminPanelViewAllTasksPage/AdminPanelViewAllTaskPage'
 import AdminPanelEditSingleTaskPage from 'pages/AdminPanel/Subpages/AdminPanelEditSingleTaskPage/AdminPanelEditSingleTaskPage'
 import SingleTaskView from 'components/Views/SingleTaskView/SingleTaskView'
+import EditSingleTaskPage from 'pages/TasksPage/EditSingleTaskPage/EditSingleTaskPage'
 
 
 
@@ -33,8 +34,9 @@ const AppRoot = () => {
                   <Route path={AppLinks.home} element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
                   <Route path={AppLinks.tasks} element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
                   <Route path={`${AppLinks.tasksViewSingleTask}/:id`} element={<ProtectedRoute><SingleTaskView /></ProtectedRoute>} />
+                  <Route path={`${AppLinks.tasksEditSingleTask}/:id`} element={<ProtectedRoute><EditSingleTaskPage /></ProtectedRoute>} />
                   <Route path={AppLinks.timesheet} element={<ProtectedRoute><TimesheetPage /></ProtectedRoute>} />
-                  <Route path={AppLinks.teams} element={<ProtectedRoute><TeamsPage /></ProtectedRoute>} />
+                  <Route path={AppLinks.projects} element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
                   <Route path={AppLinks.profile} element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                   <Route path={AppLinks.adminPanel} element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} >
                      <Route index element={<MainAdminPanelView />} />

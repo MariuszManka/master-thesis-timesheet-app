@@ -6,6 +6,8 @@ import currentUserState, { initialCurrentUserState } from './CurrentUserSlice/Cu
 import adminPanelState, { initialAdminPanelState } from './admin/AdminPanelSlice/AdminPanelSlice'
 import applicationState, { initialApplicationState } from './ApplicationSlice/ApplicationSlice'
 import tasksState, { initialTasksState } from './TasksSlice/TasksSlice'
+import timesheetState, { initialTimesheetState } from './TimesheetSlice/TimesheetSlice'
+import projectsState, { initialProjectsState } from './ProjectsSlice/ProjectsSlice'
 
 
 export const saveCurrentState = (state : AppState) => {
@@ -26,6 +28,12 @@ export const saveCurrentState = (state : AppState) => {
     
     const tasksState = JSON.stringify(state.tasksState)
     sessionStorage.add(SLICE_KEYS.TASKS_SLICE, tasksState)
+
+    const timesheetState = JSON.stringify(state.timesheetState)
+    sessionStorage.add(SLICE_KEYS.TIMESHEET_SLICE, timesheetState)
+
+    const projectsState = JSON.stringify(state.projectsState)
+    sessionStorage.add(SLICE_KEYS.PROJECTS_SLICE, projectsState)
   }
 }
 
@@ -37,13 +45,17 @@ const loadState = () => {
   const currentUserState = getSessionState(SLICE_KEYS.CURRENT_USER_SLICE, initialCurrentUserState)
   const adminPanelState = getSessionState(SLICE_KEYS.ADMIN_PANEL_SLICE, initialAdminPanelState)
   const tasksState = getSessionState(SLICE_KEYS.TASKS_SLICE, initialTasksState)
-
+  const timesheetState = getSessionState(SLICE_KEYS.TIMESHEET_SLICE, initialTimesheetState)
+  const projectsState = getSessionState(SLICE_KEYS.PROJECTS_SLICE, initialProjectsState)
+  
 
   return {
     applicationState,
     currentUserState,
     adminPanelState,
-    tasksState
+    tasksState,
+    timesheetState,
+    projectsState,
   }
 }
 
@@ -75,6 +87,8 @@ export const store = configureStore({
       adminPanelState,
       currentUserState,
       tasksState,
+      projectsState,
+      timesheetState,
   },
   preloadedState: loadState(),
 })

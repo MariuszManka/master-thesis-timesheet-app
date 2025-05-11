@@ -33,6 +33,10 @@ class Settings(BaseSettings):
 
       #TIMESHEET
       "timesheet": "timesheet",
+
+      #PROJECTS
+      "project_participants": "project_participants",
+      "projects": "projects",
    }
 
    DATABASE_DATE_FORMAT_FOR_FRONT: str = "yyyy-MM-dd"

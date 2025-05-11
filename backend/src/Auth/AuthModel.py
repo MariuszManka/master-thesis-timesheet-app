@@ -1,13 +1,19 @@
 from pydantic import BaseModel, EmailStr
 from sqlalchemy import Column, String, Boolean, ForeignKey, BLOB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from enum import Enum
 
 from src.DatabaseConnector import Base
 from src.GlobalConfig import settings, AppRoleEnum
 from src.Timesheet.TimesheetModel import TimesheetResponse, Timesheet
 from typing import Optional, List
 from src.Tasks.TasksModels import account_tasks, TasksResponse
+from src.Projects.ProjectsModels import project_participants, ProjectResponse
+
+
+class AddressType(str, Enum):
+    primary = "Formalny"
+    correspondence = "Korespondencyjny"
 
 
 
@@ -49,6 +55,15 @@ class Accounts(Base):
     task_comments: Mapped[List["TaskComments"]] = relationship(
         back_populates="creator",
         cascade="all, delete-orphan",
+    )
+
+    owned_projects: Mapped[List["Projects"]] = relationship(
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
+
+    participating_projects: Mapped[List["Projects"]] = relationship(
+        secondary=project_participants, back_populates="participants",
     )
 
     class Config:
@@ -94,7 +109,12 @@ class UserAddresses(Base):
     account_id: Mapped[int] = mapped_column(ForeignKey(f"{settings.TABLE_NAMES['accounts']}.id"), unique=True)
     user_account: Mapped["Accounts"] = relationship(back_populates="user_addresses")
 
-    street = Column(String, nullable=True)
+    address_type = Column(String, nullable=False, index=True)
+    street = Column(String, nullable=False, index=True)
+    city = Column(String, nullable=False, index=True)
+    postal_code = Column(String, nullable=False, index=True)
+    house_number = Column(String, nullable=True, index=True)
+    flat_number = Column(String, nullable=True, index=True)
 
     class Config:
         orm_mode = True
@@ -107,26 +127,6 @@ class UserInDatabase(Accounts):
 
    class Config:
       from_attributes = True
-
-
-class AccountsResponse(BaseModel):
-    id: int
-    email: EmailStr
-    active: bool
-    role: str
-
-    class Config:
-        from_attributes = True 
-
-
-
-class AccountCreate(BaseModel):
-   email: EmailStr
-   active: bool
-   role: AppRoleEnum
-   position: str
-   full_name: str
-   plane_password: str
 
 
 class UserInfoResponse(BaseModel):
@@ -148,12 +148,62 @@ class UserPreferencesResponse(BaseModel):
         from_attributes = True
 
 
+
+class AccountsResponse(BaseModel):
+    id: int
+    email: EmailStr
+    active: bool
+    role: str
+
+    class Config:
+        from_attributes = True 
+
+class AccountsProjectsResponse(BaseModel):
+    id: int
+    email: EmailStr
+    active: bool
+    role: str
+    user_info: Optional[UserInfoResponse] = None
+
+    class Config:
+        from_attributes = True 
+
+class AccountCreate(BaseModel):
+   email: EmailStr
+   active: bool
+   role: AppRoleEnum
+   position: str
+   full_name: str
+   plane_password: str
+
+
+
 class UserAddressesResponse(BaseModel):
     id: int
-    street: Optional[str] = None
+    street: str
+    address_type: AddressType
+    city: str
+    postal_code: str
+    house_number: Optional[str]
+    flat_number: Optional[str]
 
     class Config:
         from_attributes = True
+
+
+
+class UserAddressesUpdateData(BaseModel):
+    id: int
+    street: Optional[str] = None
+    address_type: Optional[AddressType] =  next(iter(AddressType))
+    city: Optional[str] = None
+    postal_code: Optional[str] = None
+    house_number: Optional[str] = None
+    flat_number: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
 
 
 class ExtendedAccountsResponse(AccountsResponse):
@@ -176,3 +226,6 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
    email: str or None = None
+
+
+ProjectResponse.model_rebuild()

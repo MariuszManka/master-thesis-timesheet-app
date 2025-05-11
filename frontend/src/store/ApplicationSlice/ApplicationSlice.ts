@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { SLICE_KEYS } from '../SliceKeys'
 import { IAllUsersNamesResponse, IFetchCurrentAppConfig, IFetchTaskInfoResponse } from 'services/SettingsService/SettingsService'
+import { IAllProjectsSubjectsModel } from 'services/ProjectsService/ProjectsService'
 
 
 export interface IApplicationState {
@@ -11,6 +12,7 @@ export interface IApplicationState {
    appDatabaseDateFormatForFront: string;
    allTasksInfoArray: IFetchTaskInfoResponse[]
    appAllUsersNames: IAllUsersNamesResponse[]
+   currentUserAllProjectsSubjects: IAllProjectsSubjectsModel[]
 }
 
 export const initialApplicationState: IApplicationState = {
@@ -20,7 +22,8 @@ export const initialApplicationState: IApplicationState = {
    appTimesheetActivityTypes: [],
    appDatabaseDateFormatForFront: '',
    allTasksInfoArray: [],
-   appAllUsersNames: []
+   appAllUsersNames: [],
+   currentUserAllProjectsSubjects: [],
 }
 
 
@@ -40,11 +43,14 @@ export const applicationSlice = createSlice({
       },
       fetchAllUsersNamesArray: (state, action: PayloadAction<IAllUsersNamesResponse[]>) => {
          state.appAllUsersNames = action.payload
+      },
+      fetchAllProjectsSubjects: (state, action: PayloadAction<IAllProjectsSubjectsModel[]>) => {
+         state.currentUserAllProjectsSubjects = action.payload
       }
    }  
  })
  
  // Action creators are generated for each case reducer function
- export const { fetchCurrentAppConfig, fetchAllTasksInfoArray, fetchAllUsersNamesArray } = applicationSlice.actions
+ export const { fetchCurrentAppConfig, fetchAllTasksInfoArray, fetchAllUsersNamesArray, fetchAllProjectsSubjects } = applicationSlice.actions
  
  export default applicationSlice.reducer

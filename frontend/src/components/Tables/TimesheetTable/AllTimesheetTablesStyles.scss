@@ -1,0 +1,36 @@
+@import '../../../common/styles/theme.scss';
+
+.timesheet-table-change-view-buttons-wrapper {
+   display: inline-flex;
+   border: 1px solid $main-app-navy-color;
+   width: fit-content;
+   justify-content: space-between;
+   border-radius: 4px;
+   align-self: flex-end;
+
+   & button {
+      width: 150px;
+      padding: 6px 20px;
+      background: transparent;
+      transition: all .18s ease-in;
+   }
+
+   & button:first-of-type {
+      border-right: 1px solid $main-app-navy-color;
+      border-radius: 4px 0 0 4px;
+   }
+
+   & button:last-of-type {
+      border-radius: 0 4px 4px 0;
+   }
+
+   .timesheet-table-change-view-current-active-button {
+      background: linear-gradient(270deg, rgba(25,59,82,1) 0%, rgba(13,31,43,1) 110%);
+      color: #FFF;
+   }
+}
+
+.timesheet-table-inline-editor {
+  max-height: 50px;
+  width: 100%;
+}

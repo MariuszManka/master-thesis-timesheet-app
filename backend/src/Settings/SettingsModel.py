@@ -18,4 +18,7 @@ class SettingsTaskInfoResponse(BaseModel):
 
 class AllUsersResponse(BaseModel):
     id: int
-    user: str   
+    user: str
+
+    class Config:
+        from_attributes = True

@@ -8,6 +8,7 @@ import { Environment } from 'environment/AppSettings'
 
 
 export interface ITaskForm {
+   project_id: number | null;
    subject: string;
    description: string;
    descriptionInHTMLFormat: string;
@@ -19,9 +20,9 @@ export interface ITaskForm {
    lastUpdateDateTime: string | null;
    dueDate: string | null;
    parentTaskId?: number | null;
+   parentTask: ITaskResponseModel | null;
    estimatedHours?: number | null;
-
-   assignedUsers: IAllUsersNamesResponse[];
+   assignedUsers: IAllUsersNamesResponse[] | null;
 }
 
 export interface ITasksState {
@@ -32,6 +33,7 @@ export interface ITasksState {
 }
 
 export const defaultTaskFormObject: ITaskForm = {
+   project_id: null,
    subject: '',
    description: '',
    descriptionInHTMLFormat: '',
@@ -43,6 +45,7 @@ export const defaultTaskFormObject: ITaskForm = {
    lastUpdateDateTime: null,
    dueDate: null,
    parentTaskId: undefined,
+   parentTask: null,
    estimatedHours: undefined,
 
    assignedUsers: [],
@@ -52,7 +55,7 @@ export const initialTasksState: ITasksState = {
    allTasks: [],
    taskForm: defaultTaskFormObject,
    currentSelectedTaskForPreview: undefined,
-   currentTableSettings: { offset: 0, limit: Environment.defaultRowsPerTablePage, selectedUserObject: undefined },
+   currentTableSettings: { offset: 0, limit: Environment.defaultRowsPerTablePage, selectedUserObject: undefined, selectedProjectObject: undefined },
 }
 
 

@@ -11,5 +11,23 @@
 .tasks-page-content-section-outer-wrapper {
    display: flex;
    flex-direction: column;
-   row-gap: 25px;
+   row-gap: 40px;
+   max-width: $section-max-width;
+}
+
+.task-add-form-outer-wrapper {
+   .p-fieldset-legend {
+      background: transparent !important;
+      font-size: 24px;
+      font-weight: 400;
+      color: $main-app-navy-color;
+
+      a:focus {
+         background-color: transparent !important;
+      }
+
+      &:hover {
+         background: transparent !important;
+      }
+   }
 }

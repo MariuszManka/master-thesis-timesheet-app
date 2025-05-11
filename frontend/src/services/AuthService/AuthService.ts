@@ -3,7 +3,7 @@ import { HttpClient } from 'common/HttpClient'
 import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
 import { Environment } from 'environment/AppSettings'
 import { IOperationSuccessfulResponse } from 'models/HttpRequestModels'
-import { ISingleUserDataModel, IUserInfoModel, IUserPreferencesModel } from 'store/admin/AdminPanelSlice/AdminPanelSlice'
+import { ISingleUserDataModel, IUserAddressesModel, IUserInfoModel, IUserPreferencesModel } from 'store/admin/AdminPanelSlice/AdminPanelSlice'
 
 
 // ========================================== INTERFACES ==========================================
@@ -32,6 +32,10 @@ export interface ICreateUserAccountData {
 export interface IPartialSingleUserDataModel extends Omit<ISingleUserDataModel, 'user_info' | 'user_preferences'> {
    user_info: Partial<IUserInfoModel>;
    user_preferences: Partial<IUserPreferencesModel>;
+}
+
+export interface IUpdateUserAddress extends Partial<IUserAddressesModel>{
+   id: number;
 }
 
 export interface IUpdateCurrentUserData {
@@ -66,6 +70,7 @@ export class AuthService{
     private readonly _deleteSelectedUserAccountPath = "/users/delete-user";
     private readonly _updateCurrentUserAccountPath = "/users/update-user";
     private readonly _uploadUserAvatarPath = "/users/upload-avatar";
+    private readonly _updateUserAddressPath = "/users/update-user-address";
   
     constructor() {
         if (instance) { //SINGLETON DESIGN PATTERN
@@ -138,6 +143,15 @@ export class AuthService{
       formData.append('id', userId.toString())
 
       return (await this._client.upload<IUploadUserAvatarResponse>(this._uploadUserAvatarPath, formData, true)).data
+   }
+
+   public async updateUserAddress(updates: IUpdateUserAddress): Promise<IUserAddressesModel[]> {
+
+      return (await this._client.patch<IUserAddressesModel[], IUpdateUserAddress>(
+         this._updateUserAddressPath, 
+         updates,
+         true
+      )).data   
    }
 }
 

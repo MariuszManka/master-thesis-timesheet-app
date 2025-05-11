@@ -11,10 +11,10 @@ from src.Tasks.TasksModels import AppTaskPriority, AppTaskStatuses, AppTaskTypes
 from src.Timesheet.TimesheetModel import AppTimesheetActivityTypes
 from src.Auth.AuthModel import Accounts, UserInfo
 from src.Auth.AuthConfig import get_current_active_user
-from src.GlobalConfig import settings
+from src.GlobalConfig import settings, AppRoleEnum
 
 from src.Settings.SettingsModel import SettingsResponse, SettingsTaskInfoResponse, AllUsersResponse
-
+from src.Projects.ProjectsModels import Projects, project_participants
 
 #TODO PRZENIEŚĆ DO JEDNEGO PLIKU
 import logging
@@ -52,9 +52,42 @@ async def get_current_app_settings(db: Session = Depends(get_database), current_
 
 @settingsRouter.get("/all-users-names", tags=["Settings API"])
 async def get_all_users_list(db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
-    """
+   """
       Endpoint zwracający listę obecnie utworzonych w systemie kont użytkowników. 
-    """
-    users_from_db = db.query(UserInfo.id, UserInfo.full_name).order_by(UserInfo.id).all()
+   """
 
-    return [AllUsersResponse(id=user.id, user=user.full_name) for user in users_from_db]
+   #Założenie dla managera: Możemy przeglądać wszystkich użytkowników, będących pracownikami
+   if current_user.role == AppRoleEnum.manager:
+      all_users = (
+         db.query(UserInfo.id, UserInfo.full_name)
+         .join(Accounts, Accounts.id == UserInfo.account_id)
+         .filter(Accounts.role == AppRoleEnum.employee)
+         .distinct()
+         .all()
+      )
+
+   #Założenie dla użytkownika: Możemy przeglądać użytkowników będących w tych samych projektach co my. Nie możemy przeglądać danych wszystkich użytkowników.
+   elif current_user.role == AppRoleEnum.employee: 
+      user_projects = (
+         db.query(Projects.id)
+            .join(project_participants, project_participants.c.project_id == Projects.id)
+            .filter(project_participants.c.account_id == current_user.id)
+            .all()
+      )
+      
+      all_users = (
+         db.query(UserInfo.id, UserInfo.full_name)
+            .join(project_participants, project_participants.c.account_id == UserInfo.id)
+            .join(Projects, project_participants.c.project_id == Projects.id)
+            .filter(Projects.id.in_([project.id for project in user_projects]))
+            .distinct()  # Zapewniamy, że każdy użytkownik pojawi się tylko raz
+            .all()
+         )
+
+   #Założenie dla administratorów: Mogą przeglądać wszystkich użytkowników
+   elif current_user.role == AppRoleEnum.admin:
+      all_users = db.query(UserInfo.id, UserInfo.full_name).order_by(UserInfo.id).all()
+
+
+
+   return [AllUsersResponse(id=user.id, user=user.full_name) for user in all_users]

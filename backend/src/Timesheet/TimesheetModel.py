@@ -26,7 +26,7 @@ class Timesheet(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     activityDate = Column(Date, index=True, nullable=False)
-    timeSpentInHours = Column(String, index=True, nullable=False)
+    timeSpentInHours = Column(Double, index=True, nullable=False)
     taskDescription = Column(String, nullable=True)
     activityType = Column(String, index=True, nullable=False)
 
@@ -44,9 +44,12 @@ class Timesheet(Base):
 class TimesheetResponse(BaseModel):
     id: int
     activityDate: date
-    timeSpentInHours: str  # If using Time type in SQLAlchemy, return as string
+    timeSpentInHours: float  # If using Time type in SQLAlchemy, return as string
+    creatorFullName: Optional[str] = None
+    assignedTaskSubject: Optional[str] = None
     taskDescription: Optional[str] = None
     activityType: AppTimesheetActivityTypes
+    isCurrentUserTimesheet: Optional[bool] = None
     assignedTaskId: int
     accountId: int
 
@@ -63,19 +66,18 @@ class TimesheetInDatabase(Timesheet):
 
 class TimesheetCreate(BaseModel):
     activityDate: date
-    timeSpentInHours: str = Field(..., description="Time spent in hh:mm or hh.mm format")
+    timeSpentInHours: float
     taskDescription: Optional[str] = None
     activityType: AppTimesheetActivityTypes
     assignedTaskId: int
-    accountId: int
 
-    @field_validator("timeSpentInHours")
-    @classmethod
-    def validate_time_format(cls, value: str) -> str:
-        pattern = r"^\d{1,2}[:.]\d{2}$"  # Matches "hh:mm" or "hh.mm"
-        if not re.match(pattern, value):
-            raise ValueError("Invalid format: Use hh:mm or hh.mm")
-        return value
+    # @field_validator("timeSpentInHours")
+    # @classmethod
+    # def validate_time_format(cls, value: str) -> str:
+    #     pattern = r"^\d{1,2}[:.]\d{2}$"  # Matches "hh:mm" or "hh.mm"
+    #     if not re.match(pattern, value):
+    #         raise ValueError("Invalid format: Use hh:mm or hh.mm")
+    #     return value
 
 
     class Config:

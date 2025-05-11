@@ -14,7 +14,7 @@ $font-family: "Poppins", sans-serif;
 
 // ============ SIZES =============
 $navbar-width: 300px;
-
+$section-max-width: calc(-300px + 90vw);
 
 
 
@@ -44,7 +44,7 @@ $navbar-width: 300px;
 }
 
 @mixin outer-page-content-wrapper {
-   padding: 35px 50px;
+   padding: 35px 50px 80px 50px;
    display: flex;
    flex-direction: column;
    justify-content: stretch;
@@ -73,6 +73,6 @@ $navbar-width: 300px;
    & svg {
       height: $header-height;
       width: $header-height;
-      fill: $secondary-app-color-light;
+      fill: $main-app-navbar-background;
    }
 }

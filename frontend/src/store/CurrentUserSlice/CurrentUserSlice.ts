@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { SLICE_KEYS } from '../SliceKeys'
 import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
-import { ISingleUserDataModel } from 'store/admin/AdminPanelSlice/AdminPanelSlice'
+import { ISingleUserDataModel, IUserAddressesModel } from 'store/admin/AdminPanelSlice/AdminPanelSlice'
 
 
 export interface ICurrentUserState extends Omit<ISingleUserDataModel, 'id'> {
@@ -30,10 +30,7 @@ export const initialCurrentUserState: ICurrentUserState = {
       id: 0,
       theme: "",
    },
-   user_addresses: {
-      id: 0,
-      street: "",
-   },
+   user_addresses: [],
    associated_tasks: [],
 }
 
@@ -58,11 +55,14 @@ export const currentUserSlice = createSlice({
       },
       setNewUserAvatar: (state, action: PayloadAction<string>) => {
          state.user_info.avatar = action.payload
+      },
+      setUserAddresses: (state, action: PayloadAction<IUserAddressesModel[]>) => {
+         state.user_addresses = action.payload
       }
    }  
  })
  
  // Action creators are generated for each case reducer function
- export const { setCurrentUserData, setNewUserAvatar } = currentUserSlice.actions
+ export const { setCurrentUserData, setNewUserAvatar, setUserAddresses } = currentUserSlice.actions
  
  export default currentUserSlice.reducer

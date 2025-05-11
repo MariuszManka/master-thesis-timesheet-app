@@ -17,7 +17,7 @@ import { IconField } from 'primereact/iconfield'
 import { InputText } from 'primereact/inputtext'
 import { InputIcon } from 'primereact/inputicon'
 import { Link } from '@mui/material'
-import { DataTable, DataTableFilterMeta, DataTableRowClickEvent, DataTableSortEvent } from 'primereact/datatable'
+import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { Dialog } from 'primereact/dialog'
 
@@ -29,18 +29,20 @@ import { Environment } from 'environment/AppSettings'
 import { ITasksTableProps } from './TasksTableProps'
 import { IAllUsersNamesResponse } from 'services/SettingsService/SettingsService'
 import usePersistedState from 'common/hooks/usePersistedState'
+import BugReportOutlinedIcon from '@mui/icons-material/BugReportOutlined';
 
 
 import './TasksTableStyles.scss'
 import '../TablesStyles.scss'
 import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
 import { Divider } from 'primereact/divider'
+import { IAllProjectsSubjectsModel } from 'services/ProjectsService/ProjectsService'
 
 
 
 // ========================================== TABLES VIEWS DEFINITIONS ==========================================
    
-const DescriptionBodyTemplate = (rowData: ITaskResponseModel) => (
+export const DescriptionBodyTemplate = (rowData: ITaskResponseModel) => (
    <div className="tasks-table-view-all-users-full-name-body-wrapper" dangerouslySetInnerHTML={{ __html: rowData.description }}/>
 )
 
@@ -57,7 +59,7 @@ const AssignedUsersBodyTemplate = (rowData: ITaskResponseModel) => (
    </div>
 )
 
-const PriorityBodyTemplate = (rowData: ITaskResponseModel) => {
+export const TaskTablePriorityBodyTemplate = (rowData: ITaskResponseModel) => {
    switch (rowData.priority) {
          case 'Niski':
             return (
@@ -110,7 +112,7 @@ const PriorityBodyTemplate = (rowData: ITaskResponseModel) => {
    }
 }
 
-const TaskStatusBodyTemplate = (rowData: ITaskResponseModel) => (
+export const TaskStatusBodyTemplate = (rowData: ITaskResponseModel) => (
    rowData.taskStatus !== null ? (
       <Tag
          className='table-tag-main-styles'
@@ -122,20 +124,18 @@ const TaskStatusBodyTemplate = (rowData: ITaskResponseModel) => (
    <div /> // PLACEHOLDER
 )
 
-const DateBodyTemplate = (dateToConvert: string | null, appDatabaseDateFormatForFront: string) => (
+export const DateBodyTemplate = (dateToConvert: string | null, appDatabaseDateFormatForFront: string) => (
    dateToConvert !== null ? 
    <p>{DateTime.fromFormat(dateToConvert, appDatabaseDateFormatForFront).toFormat("dd/MM/yyyy")}</p> :
    <p />
 )
    
-const EstimatedHoursBodyTemplate = (rowData: ITaskResponseModel) => (
-   rowData.estimatedHours !== null ? 
-   <p>{rowData.estimatedHours}</p> :
-   <p></p>
+export const EstimatedHoursBodyTemplate = (time: number | null | undefined ) => (
+   (time !== null && time !== undefined) ? <p>{time}h</p> : <p></p>
 )
    
 
-const TaskTypeBodyTemplate = (rowData: ITaskResponseModel) => {
+export const TaskTypeBodyTemplate = (rowData: ITaskResponseModel) => {
    switch (rowData.taskType) {
       case 'Zadanie':
          return (
@@ -163,6 +163,14 @@ const TaskTypeBodyTemplate = (rowData: ITaskResponseModel) => {
                value={rowData.taskType} severity="info" 
             />
          ) 
+      case 'Testy':
+         return (
+            <Tag 
+               style={{ width: 120, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'flex-start', color: '#736d25', background: 'transparent' }} 
+               icon={<BugReportOutlinedIcon style={{ width: 20, marginRight: 5 }}/>} 
+               value={rowData.taskType} severity="info" 
+            />
+         ) 
       
       case 'Wsparcie':
          return (
@@ -185,7 +193,7 @@ const TasksTable = (props: ITasksTableProps) => {
    const navigate = useNavigate()
    const { enqueueSnackbar } = useSnackbar()
    
-   const { appDatabaseDateFormatForFront, appAllUsersNames } = useSelector((state: AppState) => state.applicationState)
+   const { appDatabaseDateFormatForFront, appAllUsersNames, currentUserAllProjectsSubjects } = useSelector((state: AppState) => state.applicationState)
    const currentTableSettings = useSelector((state: AppState) => state.tasksState.currentTableSettings)
    const currentUserRole = useSelector((state: AppState) => state.currentUserState.role)
    const IS_EMPLOYEE = currentUserRole === SystemRoles.EMPLOYEE
@@ -197,21 +205,24 @@ const TasksTable = (props: ITasksTableProps) => {
    const [tasks, setTasks] = useState<ITaskResponseModel[]>([])
    const [totalRecords, setTotalRecords] = useState(0)
    const [lazyParams, setLazyParams] = useState({ first: currentTableSettings.offset, rows: currentTableSettings.limit, filter: '' })
-   const [currentSelectedUserForDataFetching, setCurrentSelectedUserForDataFetching] = usePersistedState<IAllUsersNamesResponse>(
-      "TASK_TABLE_CURRENT_SELECTED_USER", 
-      appAllUsersNames.filter(userName => userName.id === props.userId)[0] || currentTableSettings.selectedUserObject
+   const [currentSelectedUserForDataFetching, setCurrentSelectedUserForDataFetching] = useState<IAllUsersNamesResponse | undefined>(
+      undefined
+      // appAllUsersNames.filter(userName => userName.id === props.userId)[0] || currentTableSettings.selectedUserObject
    )
+   const [currentSelectedProjectForDataFetching, setCurrentSelectedProjectForDataFetching] = useState<IAllProjectsSubjectsModel | undefined>(undefined)
 
    // ====================================== FUNKCJE ======================================
    useEffect(() => {
       loadLazyData()
-   }, [ lazyParams, currentSelectedUserForDataFetching ])
+   }, [ lazyParams, currentSelectedUserForDataFetching, currentSelectedProjectForDataFetching ])
 
 
    const loadLazyData = useCallback(async () => {
       try {
          setIsLoading(true)
-         const response = await tasksService.fetchAllTasksList(lazyParams.first, lazyParams.rows, currentSelectedUserForDataFetching?.id, lazyParams.filter)
+         const response = await tasksService.fetchAllTasksList(
+            lazyParams.first, lazyParams.rows, currentSelectedUserForDataFetching?.id, currentSelectedProjectForDataFetching?.id, lazyParams.filter
+         )
          dispatch(setAllTasks(response.tasks))
          setTasks(response.tasks)
          setTotalRecords(response.total)
@@ -223,7 +234,7 @@ const TasksTable = (props: ITasksTableProps) => {
       finally {
          setIsLoading(false)
       }
-   }, [ lazyParams, currentSelectedUserForDataFetching ])
+   }, [ lazyParams, currentSelectedUserForDataFetching, currentSelectedProjectForDataFetching ])
 
 
    
@@ -278,12 +289,17 @@ const TasksTable = (props: ITasksTableProps) => {
    // ==================================================================================
 
 
-   const parentTaskIdBodyTemplate = (rowData: ITaskResponseModel) => {
+   const parentTaskIdBodyTemplate = (rowData: ITaskResponseModel) => {      
       const handleOnLinkClick = () => { 
-         //Jeśli klikniemy w link, znajdujemy nadrzędne zadanie w tabeli ze wszystkimi zadaniami i uzupełniamy tymi danymi formularz
-         const parentTaskObject = tasks.filter(singleTask => singleTask.id === rowData.parentTaskId)[0]
+         if(!rowData.parentTask){
+            console.error("Nie można znaleźć zadania nadrzędnego")
+            return
+         }
 
+         const parentTaskObject = rowData.parentTask
+         
          dispatch(setTaskFormValues({
+            project_id: parentTaskObject.project_id,
             subject: parentTaskObject.subject,
             description: parentTaskObject.descriptionInHTMLFormat,
             descriptionInHTMLFormat: parentTaskObject.descriptionInHTMLFormat,
@@ -297,7 +313,7 @@ const TasksTable = (props: ITasksTableProps) => {
             assignedUsers: parentTaskObject.assignedUsers,
          }))
 
-         navigate(`${AppLinks.adminPanelEditTask}/${rowData.parentTaskId}`, { state: { fromNavigation: true }})
+         navigate(`${AppLinks.tasksEditSingleTask}/${rowData.parentTaskId}`, { state: { fromNavigation: true }})
       } 
       return (
          rowData.parentTaskId !== null ? 
@@ -311,19 +327,34 @@ const TasksTable = (props: ITasksTableProps) => {
       return (
          <>
             <div className='tasks-table-search-header'>
-               <Dropdown 
-                  id='TaskTableSelectUser'
-                  optionLabel='user'
-                  value={currentSelectedUserForDataFetching}
-                  onChange={(e) => {
-                     setCurrentSelectedUserForDataFetching(e.value)
-                     dispatch(setCurrentAllTasksTableSettings({ ...currentTableSettings, selectedUserObject: e.value }))
-                  }}
-                  options={appAllUsersNames}
-                  placeholder='Wybierz użytkownika'
-                  className='task-table-choose-user-dropdown'
-                  showClear={Boolean(!IS_EMPLOYEE && props.isAdminMode)}
-               />
+               <div className='tasks-table-search-header-dropdowns-wrapper'>
+                  <Dropdown 
+                     id='TaskTableSelectUser'
+                     optionLabel='user'
+                     value={currentSelectedUserForDataFetching}
+                     onChange={(e) => {
+                        setCurrentSelectedUserForDataFetching(e.value)
+                        dispatch(setCurrentAllTasksTableSettings({ ...currentTableSettings, selectedUserObject: e.value }))
+                     }}
+                     options={appAllUsersNames}
+                     placeholder='Wybierz użytkownika'
+                     className='task-table-choose-user-dropdown'
+                     showClear={true}
+                     />
+                  <Dropdown 
+                     id='TaskTableSelectProject'
+                     optionLabel='subject'
+                     value={currentSelectedProjectForDataFetching}
+                     onChange={(e) => {                     
+                        setCurrentSelectedProjectForDataFetching(e.value)
+                        dispatch(setCurrentAllTasksTableSettings({ ...currentTableSettings, selectedProjectObject: e.value }))
+                     }}
+                     options={currentUserAllProjectsSubjects}
+                     placeholder='Wybierz projekt'
+                     className='task-table-choose-user-dropdown'
+                     showClear={true}
+                  />
+               </div>
                <form className="p-inputgroup tasks-table-search-header-search-input-form-wrapper" onSubmit={(e) => onGlobalFilterChange(e)}>
                   <IconField iconPosition='right' >
                      <InputIcon className='pi pi-times' style={{ cursor: 'pointer' }} onClick={handleOnGlobalFilterInputClearIconClick}/>
@@ -350,6 +381,7 @@ const TasksTable = (props: ITasksTableProps) => {
                                  //TODO SERIALIZACJA DATY - ERROR - POPRAWIĆ
 
                                  dispatch(setTaskFormValues({
+                                    project_id: selectedTaskRow.project_id,
                                     subject: selectedTaskRow.subject,
                                     description: selectedTaskRow.descriptionInHTMLFormat,
                                     descriptionInHTMLFormat: selectedTaskRow.descriptionInHTMLFormat,
@@ -362,7 +394,7 @@ const TasksTable = (props: ITasksTableProps) => {
                                     estimatedHours: selectedTaskRow.estimatedHours,
                                     assignedUsers: selectedTaskRow.assignedUsers,
                                  })) 
-                                 navigate(`${AppLinks.adminPanelEditTask}/${selectedTaskRow?.id}`, { state: { fromNavigation: true, isFromAdminPage: props.isAdminMode }})
+                                 navigate(`${AppLinks.tasksEditSingleTask}/${selectedTaskRow?.id}`, { state: { fromNavigation: true, isFromAdminPage: props.isAdminMode }})
                               }
                            }} 
                         />
@@ -408,15 +440,17 @@ const TasksTable = (props: ITasksTableProps) => {
             onRowDoubleClick={(e) => !props.isAdminMode && handleOnTaskPreview(e.data as ITaskResponseModel)}
          >
             <Column field="id" header="Id" style={{ minWidth: 50, maxHeight: 50, textAlign: 'center' }} />
-            <Column field="subject" header="Tytuł" style={{ textAlign: 'left' }} />
-            <Column field="priority" header="Priorytet"  body={PriorityBodyTemplate} />
+            <Column field="subject" header="Tytuł" style={{ textAlign: 'left', minWidth: 250 }} />
+            <Column field="projectName" header="Projekt" style={{ textAlign: 'left', minWidth: 250 }} />
+            <Column field="priority" header="Priorytet"  body={TaskTablePriorityBodyTemplate} />
+            <Column field="assignedUsers" header="Przypisani użytkownicy" style={{ minWidth: 400, maxHeight: 50 }} body={AssignedUsersBodyTemplate} />
+            <Column field="description" header="Opis" style={{ minWidth: 400, maxHeight: 50 }} body={DescriptionBodyTemplate} />
             <Column field="startingDate" header="Data rozpoczęcia" style={{ textAlign: 'center' }} body={(rowData: ITaskResponseModel) => DateBodyTemplate(rowData.startingDate, appDatabaseDateFormatForFront)} />
             <Column field="dueDate" header="Data zakończenia" style={{ textAlign: 'center' }}  body={(rowData: ITaskResponseModel) => DateBodyTemplate(rowData.dueDate ?? null, appDatabaseDateFormatForFront)} />
-            <Column field="description" header="Opis" style={{ minWidth: 400, maxHeight: 50 }} body={DescriptionBodyTemplate} />
-            <Column field="assignedUsers" header="Przypisani użytkownicy" style={{ minWidth: 400, maxHeight: 50 }} body={AssignedUsersBodyTemplate} />
             <Column field="taskType" header="Typ zagadnienia" body={TaskTypeBodyTemplate} /> 
             <Column field="taskStatus" header="Status" body={TaskStatusBodyTemplate} />
-            <Column field="estimatedHours" header="Szacowany czas" style={{ textAlign: 'center' }} body={EstimatedHoursBodyTemplate} />
+            <Column field="estimatedHours" header="Szacowany czas" style={{ textAlign: 'center' }} body={(rowData: ITaskResponseModel) => EstimatedHoursBodyTemplate(rowData.estimatedHours)} />
+            <Column field="total_time_spent_in_hours" header="Przepracowany czas" style={{ textAlign: 'left', minWidth: 50  }} body={(rowData: ITaskResponseModel) => EstimatedHoursBodyTemplate(rowData.total_time_spent_in_hours)}/>
             <Column field="parentTaskId" header="Zadanie nadrzędne" style={{ textAlign: 'center' }} body={parentTaskIdBodyTemplate} /> 
 
          </DataTable>

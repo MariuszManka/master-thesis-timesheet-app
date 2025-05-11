@@ -10,19 +10,20 @@ import { AppLinks } from 'common/AppLinks'
 import { TabPanel, TabView } from 'primereact/tabview'
 import { IProfilPageUserAvatarPanelProps } from './ProfilPageProps'
 import { FileUpload, FileUploadHandlerEvent } from 'primereact/fileupload'
-import authService, { IPartialSingleUserDataModel } from 'services/AuthService/AuthService'
-import { setCurrentUserData, setNewUserAvatar } from 'store/CurrentUserSlice/CurrentUserSlice'
+import authService, { IPartialSingleUserDataModel, IUpdateUserAddress } from 'services/AuthService/AuthService'
+import { setCurrentUserData, setNewUserAvatar, setUserAddresses } from 'store/CurrentUserSlice/CurrentUserSlice'
 import { useSnackbar } from 'notistack'
-import { ISingleUserDataModel } from 'store/admin/AdminPanelSlice/AdminPanelSlice'
+import { ISingleUserDataModel, IUserAddressesFormDataModel, IUserAddressesModel } from 'store/admin/AdminPanelSlice/AdminPanelSlice'
 import usePersistedState from 'common/hooks/usePersistedState'
 import { InputText } from 'primereact/inputtext'
 import { Dropdown, DropdownChangeEvent } from 'primereact/dropdown'
-import { mapRoleToName, profileFieldsEditPrivilegesByRole, profileFieldsNames, rolesDropdownOptions, SystemRoles } from 'common/roleConfig/globalRoleConfig'
+import { addressesFieldsNames, mapRoleToName, profileFieldsEditPrivilegesByRole, profileFieldsNames, rolesDropdownOptions, SystemRoles } from 'common/roleConfig/globalRoleConfig'
 import { InputSwitch } from 'primereact/inputswitch'
 import { Divider } from 'primereact/divider'
 import { ScrollPanel } from 'primereact/scrollpanel'
 import { InputMask } from "primereact/inputmask";
 import { CustomAxiosErrorResponse } from 'common/HttpClient'
+import { Fieldset } from 'primereact/fieldset'
 
 
 
@@ -196,6 +197,165 @@ const ProfilPageEditUserMainPanel = (props: { userData: ISingleUserDataModel }) 
    )
 }
 
+
+const ProfilPageEditUserAddressesPanel = (props: { userAddresses: IUserAddressesModel[] }) => {
+   const { enqueueSnackbar } = useSnackbar()
+   const dispatch = useDispatch()
+
+   const { userAddresses } = props
+   const [afterFirstChange, setIsAfterFirstChange] = useState(false)
+   const [isFormalUpdated, setIsFormalUpdated] = useState(false)
+   const [isCorrespondenceUpdated, setIsCorrespondenceUpdated] = useState(false)
+   const [updatedFields, setUpdatedFields] = useState<{formal?: Partial<IUserAddressesModel>, correspondence?: Partial<IUserAddressesModel>}>({})
+
+   const initialFormData: IUserAddressesFormDataModel = {
+      formal: userAddresses.find(a => a.address_type === "Formalny")!,
+      correspondence: userAddresses.find(a => a.address_type === "Korespondencyjny")!,
+   }
+   
+   const [formData, setFormData] = useState<IUserAddressesFormDataModel>(initialFormData)
+
+   const handleInputChange = (addressType: keyof IUserAddressesFormDataModel, field: keyof IUserAddressesModel, value: string) => {
+      setFormData(prev => ({ 
+         ...prev, [addressType]: { ...prev[addressType], [field]: value }
+      }))
+
+      setIsAfterFirstChange(true)
+      
+      setUpdatedFields(prev => ({
+         ...prev, [addressType]: { ...prev[addressType], [field]: value }
+      }))
+
+      if (addressType === "formal") {
+         setIsFormalUpdated(true)
+      }
+      if (addressType === "correspondence") {
+         setIsCorrespondenceUpdated(true)
+      }
+   }
+
+   const renderAddressFieldset = (type: "Formalny" | "Korespondencyjny") => {
+      const label = type === "Formalny" ? "formal" : "correspondence"
+      const data = formData[label as keyof IUserAddressesFormDataModel]
+   
+
+      return (
+         <Fieldset key={type} toggleable legend={`Adres ${type}`} className='addresses-form-inner-input-wrapper'>
+            <div className='profile-form-input-wrapper'>
+               <label htmlFor={addressesFieldsNames.CITY}>Miasto</label>
+               <InputText
+                  name={addressesFieldsNames.CITY}
+                  id={addressesFieldsNames.CITY}
+                  className='profil-form-input'
+                  value={data.city ?? ''}
+                  onChange={e => handleInputChange(label, 'city', e.target.value)}       
+                  type="text"
+               />
+            </div>
+            <div className='profile-form-input-wrapper'>
+               <label htmlFor={addressesFieldsNames.STREET}>Ulica</label>
+               <InputText
+                  name={addressesFieldsNames.STREET}
+                  id={addressesFieldsNames.STREET}
+                  className='profil-form-input'
+                  value={data.street ?? ''}
+                  onChange={e => handleInputChange(label, 'street', e.target.value)}       
+                  type="text"
+               />
+            </div>
+            <div className='profile-form-input-wrapper'>
+               <label htmlFor={addressesFieldsNames.POSTAL_CODE}>Kod pocztowy</label>
+               <InputMask
+                  name={addressesFieldsNames.POSTAL_CODE}
+                  id={addressesFieldsNames.POSTAL_CODE}
+                  className='profil-form-input'
+                  value={data.postal_code ?? ''}
+                  mask="99-999"
+                  placeholder='__-___'
+                  onChange={e => handleInputChange(label, 'postal_code', e.target.value ?? '')}       
+                  type="text"
+               />
+            </div>
+            <div className='profile-form-input-wrapper'>
+               <label htmlFor={addressesFieldsNames.HOUSE_NUMBER}>Numer domu</label>
+               <InputText
+                  name={addressesFieldsNames.HOUSE_NUMBER}
+                  id={addressesFieldsNames.HOUSE_NUMBER}
+                  className='profil-form-input'
+                  value={data.house_number ?? ''}
+                  onChange={e => handleInputChange(label, 'house_number', e.target.value ?? '')}       
+                  type="text"
+                  maxLength={4}
+               />
+            </div>
+            <div className='profile-form-input-wrapper'>
+               <label htmlFor={addressesFieldsNames.FLAT_NUMBER}>Numer mieszkania</label>
+               <InputText
+                  name={addressesFieldsNames.FLAT_NUMBER}
+                  id={addressesFieldsNames.FLAT_NUMBER}
+                  className='profil-form-input'
+                  value={data.flat_number ?? ''}
+                  maxLength={4}
+                  onChange={e => handleInputChange(label, 'flat_number', e.target.value ?? '')}       
+                  type="text"
+               />
+            </div>
+         </Fieldset>
+      )
+   }
+
+   const handleOnUpdateCommit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault()
+
+      if (!afterFirstChange) return
+
+      try {
+         // Tylko te adresy, które zostały zaktualizowane
+         const updatesToSend: IUpdateUserAddress[] = []
+
+         if (isFormalUpdated) {
+            updatesToSend.push({
+               ...formData.formal, id: formData.formal.id
+            })
+         }
+
+         if (isCorrespondenceUpdated) {
+            updatesToSend.push({
+               ...formData.correspondence, id: formData.correspondence.id
+            })
+         }
+
+         // Jeśli są jakieś zmiany, wysyłamy do API
+         for (const update of updatesToSend) {
+            const updatedUserAddresses = await authService.updateUserAddress(update)
+            dispatch(setUserAddresses(updatedUserAddresses))
+         }
+
+         if (updatesToSend.length > 0) {
+            enqueueSnackbar("Dane użytkownika zostały poprawnie zaktualizowane", { variant: 'success', autoHideDuration: 5000 })
+            setIsAfterFirstChange(false)
+         } 
+      } 
+      catch (error: any) {
+         enqueueSnackbar(`Błąd podczas aktualizacji danych użytkownika: ${ error.message }`, { variant: 'error', autoHideDuration: 5000 })
+      }
+   }
+
+
+   return (
+         <form className='profile-page-form-wrapper addresses-form-wrapper' onSubmit={handleOnUpdateCommit}>
+            {
+               ["Formalny", "Korespondencyjny"].map(type => renderAddressFieldset(type as "Formalny" | "Korespondencyjny"))
+            }
+            <Button disabled={!afterFirstChange} className="profile-form-update-submit-button" variant="contained" type="submit">
+               Aktualizuj dane
+            </Button>
+         </form>
+   )
+}
+
+
+
 const ProfilPageEditUserInfoPanel = (props: { userData: ISingleUserDataModel }) => {
    return (
       <div className='card profil-page-content-info-panel'>
@@ -207,7 +367,7 @@ const ProfilPageEditUserInfoPanel = (props: { userData: ISingleUserDataModel }) 
             </TabPanel>
             <TabPanel header="Adresy" >
                <ScrollPanel style={{ height: 500, padding: '0 15px' }}>
-
+                  <ProfilPageEditUserAddressesPanel userAddresses={props.userData.user_addresses} />
                </ScrollPanel>
             </TabPanel>
          </TabView>

@@ -1,20 +1,30 @@
 import { HttpClient } from 'common/HttpClient'
+import { IOperationSuccessfulResponse } from 'models/HttpRequestModels'
+import { ISingleTimesheetTableEntry } from 'store/TimesheetSlice/TimesheetSlice'
 
 
 // ========================================== INTERFACES ==========================================
    export interface ICreateTimesheetData {
-      subject: string;
-      description: string;
-      taskType?: string;
-      taskStatus?: string;
-      priority?: string;
-      startingDate: Date;
-      dueDate?: Date;
-      estimatedHours?: number;
-      parentTaskId?: number;
+      activityDate: string;
+      timeSpentInHours: number;
+      taskDescription: string;
+      activityType: string;
+      assignedTaskId: number;
    }
 
-   export interface ITimesheetResponseModel {
+   export interface IUpdateTimesheetModel {
+      activityDate?: string;
+      timeSpentInHours?: number;
+      taskDescription?: string;
+      activityType?: string;
+      assignedTaskId?: number;
+   }
+   export interface IUpdateCurrentTimesheetData {
+      currentTimesheetId: number;
+      updatedTimesheetData: IUpdateTimesheetModel;
+   }
+
+   export interface ITimesheetInTaskModel {
       id: number;
       activityDate: Date;
       timeSpentInHours: string;
@@ -22,6 +32,17 @@ import { HttpClient } from 'common/HttpClient'
       activityType: string;
       assignedTaskId: number;
       accountId: number;
+      isCurrentUserTimesheet: boolean;
+   }
+
+   export interface ITimesheetResponse {
+      total: number,
+      tree: ISingleTimesheetTableEntry[]
+   }
+
+   export interface ITaskTimesheetResponse {
+      total: number,
+      timesheets: ITimesheetInTaskModel[]
    }
 // ================================================================================================
 
@@ -33,8 +54,12 @@ let instance: TimesheetService
 
 export class TimesheetService {
     private readonly _client: HttpClient;
-    private readonly _fetchCurrentUserTimsheetsUrlPath = "/timesheet/get-current-user-timesheets"
+    private readonly _fetchAllTeamTimesheetsUrlPath = "/timesheet/get-team-timesheets-entries"
+    private readonly _fetchAllUserTimsheetsUrlPath = "/timesheet/get-user-timesheets-entries"
+    private readonly _fetchTaskTimsheetsUrlPath = "/timesheet/get-task-timesheets"
     private readonly _createTimesheetEntryUrlPath = "timesheet/add-timesheet-entry"
+    private readonly _updateTimesheetEntryUrlPath = "timesheet/update-timesheet"
+    private readonly _deleteTimesheetEntryUrlPath = "/timesheet/delete-timesheet-entry"
   
     constructor() {
         if (instance) { //SINGLETON DESIGN PATTERN
@@ -53,8 +78,58 @@ export class TimesheetService {
       )).data;
    }
 
-   public async getCurrentUserTimesheets() : Promise<ITimesheetResponseModel[]> {
-      return (await this._client.get<ITimesheetResponseModel[]>(this._fetchCurrentUserTimsheetsUrlPath, true)).data;
+   public async getCurrentUserTimesheets(offset: number, limit: number, filter?: string) : Promise<ITimesheetResponse> {
+      const linkSearchParams = new URLSearchParams({
+         limit: limit.toString(),
+         offset: offset.toString()
+      })
+
+      filter !== undefined && linkSearchParams.append("search_query", filter.toString())
+
+      return (await this._client.get<ITimesheetResponse>(`${this._fetchAllUserTimsheetsUrlPath}?${linkSearchParams.toString()}`, true)).data;
+   }
+
+   
+   public async getCurrentTeamTimesheets(offset: number, limit: number, filter?: string) : Promise<ITimesheetResponse> {
+      const linkSearchParams = new URLSearchParams({
+         limit: limit.toString(),
+         offset: offset.toString()
+      })
+
+      filter !== undefined && linkSearchParams.append("search_query", filter.toString())
+
+      return (await this._client.get<ITimesheetResponse>(`${this._fetchAllTeamTimesheetsUrlPath}?${linkSearchParams.toString()}`, true)).data;
+   }
+
+
+   public async getTaskTimesheets(taskId: number, offset: number, limit: number, filter?: string) : Promise<ITaskTimesheetResponse> {
+      const linkSearchParams = new URLSearchParams({
+         task_id: taskId.toString(),
+         limit: limit.toString(),
+         offset: offset.toString()
+      })
+
+      filter !== undefined && linkSearchParams.append("search_query", filter.toString())
+
+      return (await this._client.get<ITaskTimesheetResponse>(`${this._fetchTaskTimsheetsUrlPath}?${linkSearchParams.toString()}`, true)).data;
+   }
+
+
+   public async updateSelectedTimesheet(timesheetUpdatedData: IUpdateCurrentTimesheetData): Promise<ITimesheetInTaskModel> {
+      const { currentTimesheetId, updatedTimesheetData } = timesheetUpdatedData
+
+      const updateCurrentUserUrl = `${this._updateTimesheetEntryUrlPath}/${currentTimesheetId}`
+      
+      return (await this._client.patch<ITimesheetInTaskModel, IUpdateTimesheetModel>(
+         updateCurrentUserUrl, 
+         updatedTimesheetData,
+         true
+      )).data
+   }
+
+   public async deleteSelectedTimesheet(timesheetToDeleteId: number): Promise<IOperationSuccessfulResponse> {
+      const userToDeleteUrl = `${this._deleteTimesheetEntryUrlPath}/${timesheetToDeleteId}`
+      return (await this._client.delete<IOperationSuccessfulResponse>(userToDeleteUrl, true)).data
    }
 }
 

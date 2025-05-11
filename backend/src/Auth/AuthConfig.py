@@ -11,7 +11,7 @@ from typing import List
 
 
 from src.DatabaseConnector import get_database
-from src.Auth.AuthModel import Accounts, UserInDatabase, TokenData, AccountCreate, AccountsResponse, UserInfo
+from src.Auth.AuthModel import Accounts, UserInDatabase, TokenData, AccountCreate, AccountsResponse, UserInfo, UserAddressesResponse, UserAddresses, UserAddressesUpdateData
 from src.GlobalModels import OperationSuccessfulResponse
 from src.GlobalConfig import settings, AppRoleEnum
 
@@ -172,6 +172,38 @@ def add_user_to_db(db: Session, user_data: AccountCreate):
         db.rollback()
         logger.error(f"Unexpected error occurred: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"An unexpected error occurred: {e}")
+   
+
+
+def update_user_address(user_update_data: UserAddressesUpdateData, db: Session, current_user: Accounts):
+    try:
+      address_to_update = db.query(UserAddresses).filter(UserAddresses.id == user_update_data.id).first()
+
+      if not address_to_update:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Nie znaleziono adresu w bazie danych")
+
+
+      update_data = user_update_data.model_dump(exclude_unset=True)
+
+      for key, value in update_data.items():
+         if key != "id":  # Nie aktualizuj ID
+               setattr(address_to_update, key, value)
+
+
+      db.commit()
+      db.refresh(address_to_update)
+
+      user_addresses = (db.query(UserAddresses).filter(UserAddresses.account_id == current_user.id).all())
+      return [UserAddressesResponse(**address.__dict__) for address in user_addresses]
+
+
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating task: {e}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Nie udało się zaktualizować adresu. {e}")
+    
+
+
    
 
 

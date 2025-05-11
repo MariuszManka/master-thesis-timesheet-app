@@ -3,7 +3,7 @@ export const AppLinks = {
    home: '/home',
    start: '/start',
    timesheet: '/timesheet',
-   teams: '/zespol',
+   projects: '/projekty',
    profile: 'moj-profil',
    
    // Panel Administracyjny
@@ -17,6 +17,7 @@ export const AppLinks = {
    // Zadania
    tasks: '/wszystkie-zadania',
    tasksViewSingleTask: '/zadanie',
+   tasksEditSingleTask: '/edytuj-zadanie',
 
 
    login: '/login',

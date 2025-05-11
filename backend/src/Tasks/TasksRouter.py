@@ -7,13 +7,13 @@ from typing import List
 
 
 from src.DatabaseConnector import get_database
-from src.Tasks.TasksModels import TasksResponse, TaskCreate, TaskCommentResponse, TaskCommentCreate, TasksCommentUpdate
+from src.Tasks.TasksModels import TasksResponse, TaskCreate, TaskCommentResponse, TaskCommentCreate, TasksCommentUpdate, TasksSubjectResponse
 from src.Auth.AuthModel import Accounts
 from src.GlobalModels import OperationSuccessfulResponse
 from src.GlobalConfig import AppRoleEnum
 from src.Auth.AuthConfig import get_current_active_user
-from src.Tasks.TasksConfig import fetch_all_tasks_list, fetch_single_task, add_task_to_db, delete_task_from_db
-from src.Tasks.TasksConfig import  update_selected_task, fetch_assigned_tasks, add_comment_to_task, fetch_comments, delete_comment_from_db, update_selected_comment
+from src.Tasks.TasksConfig import fetch_all_tasks_list, fetch_single_task, add_task_to_db, delete_task_from_db, fetch_all_tasks_subjects
+from src.Tasks.TasksConfig import  update_selected_task, add_comment_to_task, fetch_comments, delete_comment_from_db, update_selected_comment
 
 #TODO PRZENIEŚĆ DO JEDNEGO PLIKU
 import logging
@@ -31,13 +31,14 @@ async def get_all_tasks_list(
     skip: int = Query(0, alias="offset"), 
     limit: int = Query(10, alias="limit"),
     user_id: int = None,
+    project_id: int = None,
     search_query: str = None
 ):
    """
       Endpoint zwracający listę obecnie utworzonych w systemie zadań. 
    """
 
-   return fetch_all_tasks_list(db, current_user, skip, limit, user_id, search_query)
+   return fetch_all_tasks_list(db, current_user, skip, limit, user_id, project_id, search_query)
 
 
 @tasksRouter.get("/get-single-task", response_model=TasksResponse, tags=["Tasks API"])
@@ -49,11 +50,21 @@ async def get_all_tasks_list(task_id: int, db: Session = Depends(get_database), 
    return fetch_single_task(db, current_user, task_id)
 
 
+@tasksRouter.get("/get-all-tasks-subjects", response_model=List[TasksSubjectResponse], tags=["Tasks API"])
+async def get_all_tasks_subjects( db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
+   """
+      Endpoint zwracający listę obecnie utworzonych w systemie zadań. 
+   """
+
+   return fetch_all_tasks_subjects(db, current_user)
+
+
+
 @tasksRouter.post("/create-task", response_model=TasksResponse, tags=["Tasks API"])
 async def create_task(task: TaskCreate, db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
    try:
       logger.info(task)
-      return add_task_to_db(db, task)
+      return add_task_to_db(db, task, current_user)
      
    except Exception as e:
         db.rollback()
@@ -71,7 +82,7 @@ async def delete_user(task_to_delete_id: int, db: Session = Depends(get_database
     if current_user.role not in [AppRoleEnum['admin']]:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Odmowa dostępu: tylko administratorzy mogą usuwać zadania z bazy danych.",)
 
-    return delete_task_from_db(task_to_delete_id, db)
+    return delete_task_from_db(task_to_delete_id, db, current_user)
 
 
 @tasksRouter.patch("/update-task/{task_id}", response_model=TasksResponse, tags=["Tasks API"])
@@ -80,7 +91,7 @@ async def update_task(task_id: int, updates: dict, db: Session = Depends(get_dat
     Generic endpoint to update account data dynamically.
    """
    try:
-        return update_selected_task(task_id, updates, db)
+        return update_selected_task(task_id, updates, db, current_user)
 
    except Exception as e:
       db.rollback()
@@ -88,12 +99,20 @@ async def update_task(task_id: int, updates: dict, db: Session = Depends(get_dat
       raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.__str__()) 
     
 
-@tasksRouter.get("/get-current-user-task-list", response_model=List[TasksResponse], tags=["Tasks API"])
-async def get_current_user_tasks_list(db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
-    """
-    Endpoint zwracający listę zadań przypisanych do aktualnie zalogowanego użytkownika.
-    """
-    return fetch_assigned_tasks(db, current_user)
+
+
+
+
+# @tasksRouter.get("/get-current-user-task-list", response_model=List[TasksResponse], tags=["Tasks API"])
+# async def get_current_user_tasks_list(db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
+#     """
+#     Endpoint zwracający listę zadań przypisanych do aktualnie zalogowanego użytkownika.
+#     """
+#     return fetch_assigned_tasks(db, current_user)
+
+
+
+
 
 
 # ========================= TASK COMMENTS =========================

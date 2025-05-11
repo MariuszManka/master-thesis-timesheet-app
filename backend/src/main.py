@@ -6,6 +6,7 @@ from src.Auth import AuthRouter
 from src.Tasks import TasksRouter
 from src.Settings import SettingsRouter
 from src.Timesheet import TimesheetRouter
+from src.Projects import ProjectsRouter
 from src.GlobalConfig import settings
 from src.DatabaseConnector import Base, engine
 
@@ -24,6 +25,7 @@ root_router.include_router(AuthRouter.authRouter)
 root_router.include_router(TasksRouter.tasksRouter)
 root_router.include_router(SettingsRouter.settingsRouter)
 root_router.include_router(TimesheetRouter.timesheetRouter)
+root_router.include_router(ProjectsRouter.projectsRouter)
 # ============================================================
 
 

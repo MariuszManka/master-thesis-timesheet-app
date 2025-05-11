@@ -111,6 +111,20 @@ $table-view-nav-height: 41px;
    padding: 30px 20px;
    column-gap: 15px;
 
+   &.addresses-form-wrapper {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      align-items: stretch;
+
+      & .addresses-form-inner-input-wrapper .p-fieldset-content {
+         display: flex;
+         flex-wrap: wrap;
+         align-items: stretch;
+         gap: 25px;
+      }
+   }
+
    .profile-form-switch-wrapper {
       display: flex;
       justify-content: flex-start;
@@ -196,4 +210,10 @@ $table-view-nav-height: 41px;
          background-color: $main-app-navy-color;
       }
    }
+}
+
+.profile-page-user-addresses-form-wrapper {
+   display: flex;
+   flex-direction: column;
+   row-gap: 25px;
 }

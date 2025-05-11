@@ -32,10 +32,33 @@ $table-heading-spacing: 20px;
 
 .tasks-table-search-header {
    margin: $table-heading-spacing 0 $table-heading-spacing 0;
-   margin-top: $table-heading-spacing + 10px;
+   margin-top: 0;
    display: flex;
    justify-content: space-between;
+   
+   .tasks-table-search-header-dropdowns-wrapper{
+      display: flex;
+      column-gap: 25px;
+   }
 
+   @media (max-width: 1450px) {
+      .tasks-table-search-header-dropdowns-wrapper {
+        flex-direction: column;
+        row-gap: 25px;
+      }
+   }
+
+   
+   @media (max-width: 1090px) {
+      flex-direction: column;
+      justify-content: center;
+      align-items: start;
+      row-gap: 25px;
+
+      .tasks-table-search-header-search-input-form-wrapper {
+         justify-content: start !important;
+      }
+   }
 
    .task-table-choose-user-dropdown {
       justify-self: flex-end;
@@ -52,14 +75,19 @@ $table-heading-spacing: 20px;
 
    .tasks-table-search-header-search-input-form-wrapper {
       justify-content: end;
+      align-items: flex-start;
 
       .tasks-table-search-header-search-input {
          width: 300px;
+         border-radius: 4px 0 0 4px;
+         height: 44px;
       }
 
       & .tasks-table-search-header-search-button {
          background: $main-app-navy-color !important;
          width: 40px;
+         border: 1px solid $main-app-navy-color !important;
+         height: 44px;
       }
    }
 }
@@ -72,7 +100,7 @@ $table-heading-spacing: 20px;
 }
 
 .tasks-table-actions-header {
-   padding: $table-heading-spacing $table-heading-spacing $table-heading-spacing 0;
+   padding: $table-heading-spacing $table-heading-spacing 0 0;
    display: flex;
    justify-content: flex-start;
    width: 100%;

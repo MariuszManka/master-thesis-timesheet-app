@@ -23,7 +23,7 @@ import projectsService from 'services/ProjectsService/ProjectsService'
 
 const LoginPageInput = (props: ILoginPageInputProps) => {
    const [currentValue, setCurrentValue] = useState<string>("")
-   const { label, inputId, placeholder, inputType, MOCK_DEFAULT_VALUE } = props
+   const { label, inputId, placeholder, inputType } = props
 
    return (
       <div className='login-page-input-inner-wrapper'>
@@ -32,10 +32,9 @@ const LoginPageInput = (props: ILoginPageInputProps) => {
             name={inputId} 
             id={inputId}
             className='login-page-input-input'
-            // value={currentValue} //TODO PRZYWRÓCIĆ
-            defaultValue={MOCK_DEFAULT_VALUE ?? ""}
+            value={currentValue}
             placeholder={placeholder}
-            // onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentValue(e.target.value)} //TODO PRZYWRÓCIĆ
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentValue(e.target.value)}
             type={inputType}
          />
       </div>
@@ -43,8 +42,6 @@ const LoginPageInput = (props: ILoginPageInputProps) => {
 }
 
 const LoginPageForm = () => {
-   const MOCK_USER_EMAIL = 'root@example.com'
-   const MOCK_USER_PASSWORD = 'admin123$'
 
    const LOGIN_FORM_ID = 'login-page-login-form'
    const LOGIN_INPUT_NAME = 'login-page-email-input'
@@ -107,14 +104,12 @@ const LoginPageForm = () => {
          </div>
          <form id={LOGIN_FORM_ID} onSubmit={handleLoginUser}>
             <LoginPageInput
-               MOCK_DEFAULT_VALUE={MOCK_USER_EMAIL} //TODO USUNĄĆ
                label='Email'
                inputId={LOGIN_INPUT_NAME}
                placeholder='Wpisz adres email'
                inputType='text'
             />
             <LoginPageInput
-               MOCK_DEFAULT_VALUE={MOCK_USER_PASSWORD} //TODO USUNĄĆ
                label='Hasło'
                inputId={PASSWORD_INPUT_NAME}
                placeholder='Wpisz hasło'

@@ -1,5 +1,5 @@
 export class Environment {
-   public static baseApiUrl = "https://master-thesis-timesheet-app.up.railway.app/api/v1"
+   public static baseApiUrl = "https://api-master-thesis-timesheet-app.up.railway.app/api/v1"
    public static defaultUserPasswordWhileCreating = "admin123$"
 
 

@@ -2,6 +2,8 @@ from fastapi import APIRouter
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+
+from src.CustomHttpsRedirectMiddleware import CustomHTTPSRedirectMiddleware
 from src.Auth import AuthRouter
 from src.Tasks import TasksRouter
 from src.Settings import SettingsRouter
@@ -39,6 +41,9 @@ app = FastAPI (
    title=settings.PROJECT_NAME,
    openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
+
+app.add_middleware(CustomHTTPSRedirectMiddleware)
+
 
 app.add_middleware(
     CORSMiddleware,

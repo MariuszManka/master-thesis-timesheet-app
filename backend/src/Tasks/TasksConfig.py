@@ -271,6 +271,7 @@ def add_task_to_db(db: Session, task: TaskCreate, current_user: Accounts):
         assigned_users = [AllUsersResponse(id=user.id, user=user.user_info.full_name if user.user_info else "") for user in users]
         new_task.createdDate = datetime.today()
         new_task.creatorFullName = current_user.user_info.full_name if current_user.user_info else ""
+        new_task.owner_id = current_user.id
 
         db.add(new_task)
         db.commit()

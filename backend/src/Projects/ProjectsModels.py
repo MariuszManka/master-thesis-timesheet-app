@@ -33,12 +33,12 @@ class Projects(Base):
     __tablename__ = settings.TABLE_NAMES['projects']
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name = Column(String, index=True, unique=True)
-    description = Column(Text, nullable=True)
-    start_date = Column(Date, nullable=True)
-    end_date = Column(Date, nullable=True)
-    status = Column(String, nullable=True)
-    created_date = Column(DateTime, index=True)
+    name = Column(String, index=True, unique=True, nullable=False)
+    description = Column(Text, nullable=False)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    status = Column(String, nullable=False)
+    created_date = Column(DateTime, index=True, nullable=False)
 
     owner_id: Mapped[int] = mapped_column(ForeignKey(f"{settings.TABLE_NAMES['accounts']}.id"))
     owner: Mapped["Accounts"] = relationship(back_populates="owned_projects")
@@ -60,8 +60,8 @@ class Projects(Base):
 
 class ProjectBase(BaseModel):
     name: str
-    description: Optional[str] = None
-    start_date: Optional[date] = None
+    description: str = None
+    start_date: date = None
     end_date: Optional[date] = None
     status: Optional[ProjectStatus] = next(iter(ProjectStatus))
 

@@ -6,7 +6,7 @@ from src.GlobalConfig import settings
 
 
 # ======================== DATABASE INITIALIZATION & CONFIG ========================
-engine = create_engine(str(settings.SQL_LITE_DATABASE_URL), connect_args={ "check_same_thread": False })
+engine = create_engine(str(settings.SQL_DATABASE_URL))
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 # ==================================================================================

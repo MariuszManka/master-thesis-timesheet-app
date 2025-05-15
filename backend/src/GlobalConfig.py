@@ -42,7 +42,7 @@ class Settings(BaseSettings):
    DATABASE_DATE_FORMAT_FOR_FRONT: str = "yyyy-MM-dd"
    
    API_V1_STR: str
-   SQL_LITE_DATABASE_URL: str
+   SQL_DATABASE_URL: str
    PROJECT_NAME: str
    SECRET_KEY: str
    ALGORITHM: str

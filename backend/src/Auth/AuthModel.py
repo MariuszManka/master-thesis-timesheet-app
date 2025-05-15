@@ -62,6 +62,11 @@ class Accounts(Base):
         cascade="all, delete-orphan",
     )
 
+    owned_tasks: Mapped[List["Tasks"]] = relationship(
+        back_populates="owner",
+        cascade="all, delete-orphan",
+    )
+
     participating_projects: Mapped[List["Projects"]] = relationship(
         secondary=project_participants, back_populates="participants",
     )

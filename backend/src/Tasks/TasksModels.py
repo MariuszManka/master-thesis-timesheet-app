@@ -52,12 +52,12 @@ class Tasks(Base):
     __tablename__ = settings.TABLE_NAMES['tasks']
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    subject = Column(String, index=True)
-    description = Column(String, index=True)
-    descriptionInHTMLFormat = Column(Text, index=True)
-    taskType = Column(String, index=True, nullable=True)
-    taskStatus = Column(String, index=True, nullable=True)
-    priority = Column(String, index=True, nullable=True)
+    subject = Column(String, index=True, nullable=False)
+    description = Column(String, index=True, nullable=False)
+    descriptionInHTMLFormat = Column(Text, index=True, nullable=False)
+    taskType = Column(String, index=True, nullable=False)
+    taskStatus = Column(String, index=True, nullable=False)
+    priority = Column(String, index=True, nullable=False)
     startingDate = Column(Date, index=True)
     createdDate = Column(Date, index=True)
     lastUpdateDateTime = Column(DateTime, index=True, nullable=True)
@@ -73,6 +73,9 @@ class Tasks(Base):
     timesheets = relationship("Timesheet", back_populates="assigned_task", cascade="all, delete-orphan")
     associated_users: Mapped[List["Accounts"]] = relationship(secondary=account_tasks, back_populates="associated_tasks")
     comments: Mapped[List["TaskComments"]] = relationship(back_populates="task", cascade="all, delete-orphan")
+
+    owner_id: Mapped[int] = mapped_column(ForeignKey(f"{settings.TABLE_NAMES['accounts']}.id"))
+    owner: Mapped["Accounts"] = relationship(back_populates="owned_tasks")
 
     project_id: Mapped[int] = mapped_column(ForeignKey(f"{settings.TABLE_NAMES['projects']}.id"), nullable=False)
     project: Mapped["Projects"] = relationship(back_populates="tasks")
@@ -91,7 +94,7 @@ class TaskCommentResponse(BaseModel):
     creator_avatar: Optional[str] = None
     commentContent: str
     createdDateTime: datetime
-    lastUpdateDateTime: datetime
+    lastUpdateDateTime: Optional[datetime] = None
 
     class Config:
         from_attributes = True
@@ -108,8 +111,8 @@ class TasksResponse(BaseModel):
     taskType: Optional[AppTaskTypes] = next(iter(AppTaskTypes))
     taskStatus: Optional[AppTaskStatuses] = next(iter(AppTaskStatuses))
     priority: Optional[AppTaskPriority] = next(iter(AppTaskPriority))
-    startingDate: date
-    createdDate: date
+    startingDate: Optional[date] = None
+    createdDate: Optional[date] = None
     dueDate: Optional[date] = None
     lastUpdateDateTime: Optional[datetime] = None
     estimatedHours: Optional[float] = None
@@ -119,7 +122,7 @@ class TasksResponse(BaseModel):
 
     timesheets: List[TimesheetResponse] = []
 
-    assignedUsers: Optional[List["AllUsersResponse"]] = None  # string-based forward reference
+    assignedUsers: Optional[List["AllUsersResponse"]] = None
     comments: List[TaskCommentResponse] = []
 
     class Config:
@@ -128,7 +131,7 @@ class TasksResponse(BaseModel):
 class TasksSubjectResponse(BaseModel):
     id: int
     subject: str
-    createdDate: date
+    createdDate: Optional[date] = None
     associatedUserIds: List[int] = []
     class Config:
          from_attributes = True
@@ -142,18 +145,18 @@ class TaskInDatabase(Tasks):
 
 
 class TaskCreate(BaseModel):
-    subject: str
-    description: str
+    subject: str # WYMAGANE
+    description: str # WYMAGANE
     descriptionInHTMLFormat: str
-    project_id: int
-    taskType: Optional[AppTaskTypes] = next(iter(AppTaskTypes))
-    taskStatus: Optional[AppTaskStatuses] = next(iter(AppTaskStatuses))
-    priority: Optional[AppTaskPriority] = next(iter(AppTaskPriority))
-    startingDate: date
+    project_id: int # WYMAGANE
+    taskType: Optional[AppTaskTypes] = next(iter(AppTaskTypes)) # WYMAGANE
+    taskStatus: Optional[AppTaskStatuses] = next(iter(AppTaskStatuses)) # WYMAGANE
+    priority: Optional[AppTaskPriority] = next(iter(AppTaskPriority)) # WYMAGANE
+    startingDate: date # WYMAGANE
     dueDate: Optional[date] = None
     estimatedHours: Optional[float] = None
     parentTaskId: Optional[int] = None
-    assignedUsers: Optional[List[int]] = None
+    assignedUsers: Optional[List[int]] = None # WYMAGANE
 
 
 
@@ -163,7 +166,7 @@ class TaskComments(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    commentContent = Column(Text, index=True)
+    commentContent = Column(Text, index=True, nullable=False)
     createdDateTime = Column(DateTime, index=True, nullable=False)
     lastUpdateDateTime = Column(DateTime, index=True, nullable=False)
 

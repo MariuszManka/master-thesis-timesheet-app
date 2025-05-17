@@ -83,7 +83,7 @@ $table-view-nav-height: 41px;
          justify-content: space-between;
 
          .profil-page-content-avatar-panel-user-statistic-number {
-            color: #72023e;
+            color: $main-app-navy-color;
             font-weight: 700;
          }
       }
@@ -98,6 +98,9 @@ $table-view-nav-height: 41px;
 
       .p-tabview-panels {
          padding: 0;
+         border: 1px solid rgba(0, 0, 0, 0.12);
+         border-top: none;
+         border-radius: 4px;
       }
    }
 }

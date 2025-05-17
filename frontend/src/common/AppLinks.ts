@@ -15,9 +15,9 @@ export const AppLinks = {
    adminPanelEditTask: '/panel-administracyjny/edytuj-zadanie',
    
    // Zadania
-   tasks: '/wszystkie-zadania',
-   tasksViewSingleTask: '/zadanie',
-   tasksEditSingleTask: '/edytuj-zadanie',
+   tasks: '/zadania',
+   tasksViewSingleTask: '/zadania',
+   tasksEditSingleTask: '/zadania/edycja',  
 
 
    login: '/login',

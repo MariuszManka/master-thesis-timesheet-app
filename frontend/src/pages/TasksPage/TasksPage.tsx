@@ -26,7 +26,7 @@ const AddTaskForm = () => {
 
 const TasksPageContent = () => {
    const { id: currentUserId, role: currentUserRole } = useSelector((state: AppState) => state.currentUserState)
-   const IS_EMPLOYEE = currentUserRole === SystemRoles.EMPLOYEE
+   const IS_EMPLOYEE = currentUserRole !== SystemRoles.MANAGER
    
    return (
       <>

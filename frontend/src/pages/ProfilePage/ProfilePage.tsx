@@ -410,8 +410,8 @@ const ProfilPageUserAvatarPanel = (props: IProfilPageUserAvatarPanelProps) => {
          </div>
          <Divider />
          <div className='profil-page-content-avatar-panel-user-statistic-wrapper'>
-            <p>Przepracowane dni: </p>
-            <p className='profil-page-content-avatar-panel-user-statistic-number'>176</p>
+            <p>Przypisane projekty: </p>
+            <p className='profil-page-content-avatar-panel-user-statistic-number'>{props.currentUserProjectsNumber}</p>
          </div>
          <Divider />
       </div>
@@ -420,6 +420,7 @@ const ProfilPageUserAvatarPanel = (props: IProfilPageUserAvatarPanelProps) => {
 
 const ProfilPageContent = () => {
    const currentUserData = useSelector((state: AppState) => state.currentUserState)
+   const currentUserProjectsNumber = useSelector((state: AppState) => state.projectsState.currentUserProjects.length)
 
    const { user_info, associated_tasks } = currentUserData
 
@@ -435,6 +436,7 @@ const ProfilPageContent = () => {
                currentUserId={currentUserData.id} 
                position={user_info.position} 
                assignedTasksNumber={associated_tasks.length} 
+               currentUserProjectsNumber={currentUserProjectsNumber}
             />
             <ProfilPageEditUserInfoPanel userData={currentUserData} />
          </div>

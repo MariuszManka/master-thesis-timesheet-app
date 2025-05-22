@@ -36,9 +36,9 @@ const Navbar = () => {
 
    const handleLogoutUser = async() => {
       try {
-         await authService.logoutUser()
          sessionStorage.clearSessionStorage()
          appStorage.clearLocalStorage()
+         await authService.logoutUser()
    
          enqueueSnackbar('Użytkownik pomyślnie wylogowany', { variant: 'success', autoHideDuration: 5000 })
          navigate(AppLinks.login)

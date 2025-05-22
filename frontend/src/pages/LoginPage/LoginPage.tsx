@@ -16,7 +16,7 @@ import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
 import { useSnackbar } from 'notistack'
 import { CustomAxiosErrorResponse } from 'common/HttpClient'
 import settingsService from 'services/SettingsService/SettingsService'
-import { fetchAllProjectsSubjects, fetchAllTasksInfoArray, fetchAllUsersNamesArray, fetchCurrentAppConfig } from 'store/ApplicationSlice/ApplicationSlice'
+import { fetchAllProjectsSubjects, fetchAllTasksInfoArray, fetchAllUserNamesByType, fetchAllUsersNamesArray, fetchCurrentAppConfig } from 'store/ApplicationSlice/ApplicationSlice'
 import projectsService from 'services/ProjectsService/ProjectsService'
 
 
@@ -83,6 +83,11 @@ const LoginPageForm = () => {
          dispatch(fetchAllUsersNamesArray(allUsersNamesArray))
          dispatch(fetchAllProjectsSubjects(allProjectsSubjects))
    
+         // Akcje wykonywane tylko dla administratora
+         if(tokenResponse.user_data.role === SystemRoles.ADMIN) {
+            const allUsersNamesByType = await settingsService.fetchAllUsersNamesByType(SystemRoles.MANAGER)
+            dispatch(fetchAllUserNamesByType(allUsersNamesByType))
+         }
       
 
          navigate(AppLinks.projects)

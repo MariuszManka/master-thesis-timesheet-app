@@ -38,7 +38,7 @@ def fetch_user_timesheets_entries(db: Session, current_user: Accounts, skip: int
       # total_tasks_nodes = 0
 
       for task in limited_user_tasks:
-            user_timesheets = [ts for ts in task.timesheets if ts.accountId == current_user.id]
+            user_timesheets = sorted([ts for ts in task.timesheets if ts.accountId == current_user.id], key=lambda ts: ts.activityDate, reverse=True)
         
             if not user_timesheets:
                 continue
@@ -145,7 +145,7 @@ def fetch_team_timesheets_entries(db: Session, current_user: Accounts, skip: int
         tree_data = []
 
         for task in limited_team_tasks:
-            task_timesheets = task.timesheets
+            task_timesheets = sorted(task.timesheets, key=lambda ts: ts.activityDate, reverse=True)
 
             if not task_timesheets:
                 continue

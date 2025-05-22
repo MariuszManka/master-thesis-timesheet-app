@@ -51,7 +51,7 @@ account_tasks = Table(
 class Tasks(Base):
     __tablename__ = settings.TABLE_NAMES['tasks']
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     subject = Column(String, index=True, nullable=False)
     description = Column(String, index=True, nullable=False)
     descriptionInHTMLFormat = Column(Text, index=True, nullable=False)
@@ -156,7 +156,7 @@ class TaskCreate(BaseModel):
     dueDate: Optional[date] = None
     estimatedHours: Optional[float] = None
     parentTaskId: Optional[int] = None
-    assignedUsers: Optional[List[int]] = None # WYMAGANE
+    assignedUsers: List[int] = None # WYMAGANE
 
 
 
@@ -164,7 +164,7 @@ class TaskCreate(BaseModel):
 class TaskComments(Base):
     __tablename__ = settings.TABLE_NAMES['task_comments']
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
 
     commentContent = Column(Text, index=True, nullable=False)
     createdDateTime = Column(DateTime, index=True, nullable=False)

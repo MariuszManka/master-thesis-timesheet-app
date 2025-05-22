@@ -1,0 +1,25 @@
+@import '../../../common/styles/theme.scss';
+
+
+.projects-form-description-textarea-input {
+   width: 100%;
+   padding: 16.5px 14px;
+   font-size: 1rem;
+   font-family: $font-family;
+   color: rgba(0, 0, 0, 0.87);
+   border-color: rgba(0, 0, 0, 0.23);
+   border-radius: 4px;
+   resize: vertical;
+   min-height: 100px;
+   max-height: 350px;
+}
+
+.app-page-form-cancel-button {
+   border: 0px;
+   color: #020772;
+   background: transparent;
+   font-weight: 600;
+   font-size: 14px;
+   letter-spacing: 1px;
+   cursor: pointer;
+}

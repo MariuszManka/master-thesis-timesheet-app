@@ -30,7 +30,7 @@ const AdminPanelEditSingleTaskPage = () => {
                Wszystkie zadania
             </Link>
             <Link href={`${AppLinks.adminPanelEditTask}/${id}`} underline="hover" color="inherit">
-               Edytuj zadanie #{id}
+               Edycja zadania #{id}
             </Link>
          </Breadcrumbs>
          <TaskForm isEditMode={true} />

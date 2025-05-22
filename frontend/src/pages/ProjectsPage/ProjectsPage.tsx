@@ -1,13 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Breadcrumbs, Card, CardActionArea, CardContent, CardMedia, Divider, Link, Slider, Tab, Tabs } from '@mui/material'
+import React, { useCallback, useEffect, useState } from 'react';
+import { Box, Breadcrumbs, Button, Card, CardActionArea, CardContent, CardMedia, Divider, Link, Slider, Tab, Tabs } from '@mui/material'
 
 import { AppLinks } from 'common/AppLinks'
-
-import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
-import './ProjectsPage.scss'
 import projectsService, { IProjectsResponse, IUserProjectParticipantModel } from 'services/ProjectsService/ProjectsService'
 import { useDispatch, useSelector } from 'react-redux'
-import { setCurrentUserProjects } from 'store/ProjectsSlice/ProjectsSlice'
+import { IProjectForm, setCurrentUserProjects, setProjectFormValues } from 'store/ProjectsSlice/ProjectsSlice'
 import { TabPanel, TabView } from 'primereact/tabview'
 import { AppState } from 'store'
 import { Fieldset } from 'primereact/fieldset'
@@ -19,7 +16,16 @@ import { Column } from 'primereact/column'
 import { DateBodyTemplate, DescriptionBodyTemplate, EstimatedHoursBodyTemplate, TaskStatusBodyTemplate, TaskTablePriorityBodyTemplate, TaskTypeBodyTemplate } from 'components/Tables/TasksTable/TasksTable'
 import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgress';
 import AlternateEmailOutlinedIcon from '@mui/icons-material/AlternateEmailOutlined';
+import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { useNavigate } from 'react-router-dom'
+import { Dialog } from 'primereact/dialog'
+import { useSnackbar } from 'notistack'
 
+
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import './ProjectsPage.scss'
 
 
 const SingleProjectDetailsView = ({ project }: { project: IProjectsResponse }) => {
@@ -164,16 +170,64 @@ const SingleProjectAssignedUsersView = ({ projectAssignedUsers, projectOwner, cu
 
 
 const ProjectsPageContent = () => {
+   const dispatch = useDispatch()
+   const navigate = useNavigate()
+   const { enqueueSnackbar } = useSnackbar()
+
    const currentUserProjects = useSelector((state: AppState) => state.projectsState.currentUserProjects)
    const { appDatabaseDateFormatForFront } = useSelector((state: AppState) => state.applicationState)
-   const currentUserId = useSelector((state: AppState) => state.currentUserState.id)
+   const { id: currentUserId, role: currentUserRole } = useSelector((state: AppState) => state.currentUserState)
+
    const [selectedTab, setSelectedTab] = useState(0)
+   const [isDialogVisible, setIsDialogVisible] = useState(false)
    
 
    const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
       setSelectedTab(newValue);
    }
 
+   const handleEditProject = (project: IProjectsResponse) => {
+      
+      const mappedProjectObject: IProjectForm = {
+         name: project.name,
+         description: project.description,
+         start_date: DateTime.fromFormat(project.start_date as string, appDatabaseDateFormatForFront).toFormat(Environment.dateFormatToDisplay),
+         end_date: DateTime.fromFormat(project.end_date as string, appDatabaseDateFormatForFront).toFormat(Environment.dateFormatToDisplay),
+         status: project.status,
+         owner_id: project.owner_id,
+         participants: project.participants.map((user) => user.id),
+         assignedTasks: project.tasks.map((task) => task.id)
+      }
+      
+      dispatch(setProjectFormValues({ ...mappedProjectObject }))
+      navigate(`${AppLinks.projectsEditSingleProject}/${project.id}`, { state: { fromNavigation: true }})
+   }
+
+
+   const handleOnProjectDelete = useCallback(async (project: IProjectsResponse) => {
+      try {
+         await projectsService.deleteSelectedProject(project.id)
+
+         const response = await projectsService.fetchAllUserProjectsList()
+         dispatch(setCurrentUserProjects(response))
+
+         enqueueSnackbar(`Poprawnie usunięto projekt [${project.id}]`, { variant: 'success', autoHideDuration: 5000 })
+         setIsDialogVisible(false)
+      } 
+      catch (error) {
+         enqueueSnackbar("Nie udało się usunąć projektu.", { variant: "error", autoHideDuration: 5000, preventDuplicate: true })
+         setIsDialogVisible(false)
+      }
+   }, [ enqueueSnackbar ])
+
+
+   const dialogFooterContent = (project: IProjectsResponse) => (
+      <div>
+         <Button onClick={() => handleOnProjectDelete(project)}  className='app-table-delete-modal-button agree-button' style={{ marginRight: 20 }}>Tak</Button>
+         <Button onClick={() => setIsDialogVisible(false)} className="app-table-delete-modal-button disagree-button" >Nie</Button>
+      </div>
+   )
+   
 
    return (
       <>
@@ -194,9 +248,7 @@ const ProjectsPageContent = () => {
             }
          </TabView> */}
          <Tabs value={selectedTab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
-            {currentUserProjects.map((project, index) => (
-            <Tab label={project.name} key={index} wrapped/>
-            ))}
+            {currentUserProjects.map((project, index) => <Tab label={project.name} key={index} wrapped/>)}
         </Tabs>
          {currentUserProjects.map((project, index) => (
          selectedTab === index && (
@@ -204,6 +256,38 @@ const ProjectsPageContent = () => {
                <SingleProjectDetailsView project={project} />
                <SingleProjectTasksView projectTasks={project.tasks} appDatabaseDateFormatForFront={appDatabaseDateFormatForFront} />
                <SingleProjectAssignedUsersView projectAssignedUsers={project.participants} projectOwner={project.owner} currentUserId={currentUserId} />
+               {
+                  (currentUserRole === SystemRoles.MANAGER) && (
+                     <Button 
+                        className="app-page-form-submit-button" variant="contained" 
+                        style={{ width: 330, height: 45, margin: '35px auto 0 auto' }} 
+                        onClick={() => handleEditProject(project)}
+                     >
+                        Edytuj projekt <EditIcon style={{ marginLeft: 15, marginTop: -5}} />
+                     </Button>
+                  )
+               }
+               {
+                  (currentUserRole === SystemRoles.ADMIN) && (
+                     <>
+                        <Button 
+                           className="app-page-form-delete-button" variant="contained" 
+                           style={{ width: 330, height: 45, margin: '35px auto 0 auto' }} 
+                           onClick={() => setIsDialogVisible(true)}
+                        >
+                           Usuń projekt <DeleteIcon style={{ marginLeft: 15, marginTop: -5}} />
+                        </Button>
+                        <Dialog
+                           header="Potwierdź akcję" visible={isDialogVisible} style={{ width: '35vw' }} draggable={false} resizable={false}
+                           onHide={() => setIsDialogVisible(false)} footer={() => dialogFooterContent(project)}
+                        >
+                           Czy na pewno chcesz usunąć projekt: <br/>
+                           <b>{`[${project.id}] ${project.name}?`}</b> <br/><br/>
+                           <b>Usunięcie projektu, skutkuje usunięciem wszystkich przypisanych do niego zdań.</b>
+                        </Dialog>
+                     </>
+                  )
+               }
             </Box>
          )
          ))}

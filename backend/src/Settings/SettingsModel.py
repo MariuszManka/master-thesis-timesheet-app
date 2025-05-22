@@ -5,6 +5,7 @@ from src.GlobalConfig import AppRoleEnum
 
 
 class SettingsResponse(BaseModel):
+   appProjectStatuses: List[str]
    appTaskTypes: List[str]
    appTaskStatuses: List[str]
    appTaskPriority: List[str]

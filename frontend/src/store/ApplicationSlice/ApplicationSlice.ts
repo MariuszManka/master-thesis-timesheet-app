@@ -5,6 +5,7 @@ import { IAllProjectsSubjectsModel } from 'services/ProjectsService/ProjectsServ
 
 
 export interface IApplicationState {
+   appProjectStatuses: string[];
    appTaskTypes: string[];
    appTaskStatuses: string[];
    appTaskPriority: string[];
@@ -12,10 +13,12 @@ export interface IApplicationState {
    appDatabaseDateFormatForFront: string;
    allTasksInfoArray: IFetchTaskInfoResponse[]
    appAllUsersNames: IAllUsersNamesResponse[]
+   appAllUsersNamesByType?: IAllUsersNamesResponse[]
    currentUserAllProjectsSubjects: IAllProjectsSubjectsModel[]
 }
 
 export const initialApplicationState: IApplicationState = {
+   appProjectStatuses: [],
    appTaskTypes: [],
    appTaskStatuses: [],
    appTaskPriority: [],
@@ -32,6 +35,7 @@ export const applicationSlice = createSlice({
    initialState: initialApplicationState,
    reducers: {
       fetchCurrentAppConfig: (state, action: PayloadAction<IFetchCurrentAppConfig>) => {
+         state.appProjectStatuses = action.payload.appProjectStatuses
          state.appTaskTypes = action.payload.appTaskTypes
          state.appTaskStatuses = action.payload.appTaskStatuses
          state.appTaskPriority = action.payload.appTaskPriority
@@ -46,11 +50,14 @@ export const applicationSlice = createSlice({
       },
       fetchAllProjectsSubjects: (state, action: PayloadAction<IAllProjectsSubjectsModel[]>) => {
          state.currentUserAllProjectsSubjects = action.payload
-      }
+      },
+      fetchAllUserNamesByType: (state, action: PayloadAction<IAllUsersNamesResponse[]>) => {
+         state.appAllUsersNamesByType = action.payload
+      },
    }  
  })
  
  // Action creators are generated for each case reducer function
- export const { fetchCurrentAppConfig, fetchAllTasksInfoArray, fetchAllUsersNamesArray, fetchAllProjectsSubjects } = applicationSlice.actions
+ export const { fetchCurrentAppConfig, fetchAllTasksInfoArray, fetchAllUsersNamesArray, fetchAllProjectsSubjects, fetchAllUserNamesByType } = applicationSlice.actions
  
  export default applicationSlice.reducer

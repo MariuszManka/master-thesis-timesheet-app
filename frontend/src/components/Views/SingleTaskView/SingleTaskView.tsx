@@ -388,7 +388,7 @@ const SingleTaskView = () => {
       <div className='single-task-view-outer-wrapper'>
          <header className='tasks-page-header-wrapper'>
             <TaskAltIcon />
-            <h1>Zadania</h1>
+            <h1>{`Zadanie ${currentSelectedTask.id}: ${currentSelectedTask.subject}`}</h1>
          </header> 
          <section className='tasks-page-content-section-outer-wrapper'>
             <Breadcrumbs aria-label="breadcrumb" style={{ marginLeft: 5, cursor: 'pointer' }}>

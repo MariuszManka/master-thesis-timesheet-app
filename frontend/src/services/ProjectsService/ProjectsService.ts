@@ -1,7 +1,9 @@
 import { HttpClient } from 'common/HttpClient'
 import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
+import { IOperationSuccessfulResponse } from 'models/HttpRequestModels'
 import { ITaskResponseModel } from 'services/TasksService/TasksService'
 import { IUserInfoModel } from 'store/admin/AdminPanelSlice/AdminPanelSlice'
+import { IProjectForm } from 'store/ProjectsSlice/ProjectsSlice'
 
 
 // ========================================== INTERFACES ==========================================
@@ -33,6 +35,11 @@ import { IUserInfoModel } from 'store/admin/AdminPanelSlice/AdminPanelSlice'
       role: SystemRoles;
       user_info: IUserInfoModel;
    }
+
+   export interface IUpdateCurrentProjectData {
+      updatedProjectData: IProjectForm;
+      currentProjectId: number;
+   }
 // ================================================================================================
 
 
@@ -45,6 +52,9 @@ export class ProjectsService {
     private readonly _client: HttpClient;
     private readonly _fetchAllProjectsSubjectsUrlPath = "/projects/get-all-projects-subjects"
     private readonly _fetchAllUserProjectsUrlPath = "/projects/get-all-user-projects"
+    private readonly _createProjectUrlPath = "/projects/create-project"
+    private readonly _updateSelectedProjectUrlPath = "/projects/update-project"
+    private readonly _deleteSelectedProjectUrlPath = "/projects/delete-project"
     
     constructor() {
         if (instance) { //SINGLETON DESIGN PATTERN
@@ -67,6 +77,30 @@ export class ProjectsService {
          this._fetchAllUserProjectsUrlPath,
          true
       )).data
+   }
+
+   public async createProject(createTaskData: IProjectForm): Promise<any> { // TODO - POPRAWIĆ ZWRACANY TYP      
+      return (await this._client.post<any, IProjectForm>(
+        this._createProjectUrlPath, 
+        createTaskData,
+        true
+      )).data;
+   }
+
+   public async updateSelectedProject(currentProjectUpdatedData: IUpdateCurrentProjectData): Promise<IOperationSuccessfulResponse> {
+      const { currentProjectId, updatedProjectData } = currentProjectUpdatedData
+      const updateCurrentProjectUrl = `${this._updateSelectedProjectUrlPath}/${currentProjectId}`
+
+      return (await this._client.patch<IOperationSuccessfulResponse, IProjectForm>(
+         updateCurrentProjectUrl, 
+         updatedProjectData,
+         true
+      )).data
+   }
+
+   public async deleteSelectedProject(projectToDeleteId: number): Promise<IOperationSuccessfulResponse> {
+      const userToDeleteUrl = `${this._deleteSelectedProjectUrlPath}/${projectToDeleteId}`
+      return (await this._client.delete<IOperationSuccessfulResponse>(userToDeleteUrl, true)).data
    }
 }
 

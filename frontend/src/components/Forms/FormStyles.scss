@@ -94,12 +94,16 @@
    }
 
    .app-page-form-multiselect-input-tag {
-      max-width: 110px !important;
+      max-width: 180px !important;
       white-space: nowrap;
       padding-left: 8px !important;
       padding-right: 8px !important;
       font-size: 0.80rem !important;
       height: 30px !important;
+
+      &.assigned-tasks-tag {
+         max-width: 200px !important;
+      }
    }
 
    .app-page-form-switch-wrapper {
@@ -122,26 +126,44 @@
       }
    }
 
-   .app-page-form-submit-button {
-      padding: 10px 30px;
-      height: 50px;
-      background: linear-gradient(270deg, rgba(25,59,82,1) 0%, rgba(13,31,43,1) 110%);
-      color: #FFF;
-      font-size: 18px;
-      font-weight: 500;
-      border: none;
-      border-radius: 30px;
-      cursor: pointer;
-      transition: background-color 0.3s;
-      text-transform: none;
-
-      &:hover {
-         background-color: $main-app-navy-color;
-      }
-   }
 }
 
 
+.app-page-form-submit-button {
+   padding: 10px 30px;
+   height: 50px;
+   background: linear-gradient(270deg, rgba(25,59,82,1) 0%, rgba(13,31,43,1) 110%);
+   color: #FFF;
+   font-size: 18px;
+   font-weight: 500;
+   border: none;
+   border-radius: 30px;
+   cursor: pointer;
+   transition: background-color 0.3s;
+   text-transform: none;
+
+   &:hover {
+      background-color: $main-app-navy-color;
+   }
+}
+
+.app-page-form-delete-button {
+   padding: 10px 30px;
+   height: 50px;
+   background: linear-gradient(270deg, rgba(82, 20, 20, 1) 0%, rgba(107, 27, 27,1) 110%);
+   color: #FFF;
+   font-size: 18px;
+   font-weight: 500;
+   border: none;
+   border-radius: 30px;
+   cursor: pointer;
+   transition: background-color 0.3s;
+   text-transform: none;
+
+   &:hover {
+      background-color: $main-app-navy-color;
+   }
+}
 
 .app-form-wrapper-only-fields-mode {
    width: 100% !important;

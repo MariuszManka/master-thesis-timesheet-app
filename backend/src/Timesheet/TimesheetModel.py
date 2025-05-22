@@ -24,11 +24,11 @@ class AppTimesheetActivityTypes(str, Enum):
 class Timesheet(Base):
     __tablename__ = settings.TABLE_NAMES['timesheet']
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     activityDate = Column(Date, index=True, nullable=False)
     timeSpentInHours = Column(Double, index=True, nullable=False)
-    taskDescription = Column(String, nullable=True)
-    activityType = Column(String, index=True, nullable=False)
+    taskDescription = Column(String, nullable=False)
+    activityType = Column(String, index=True, nullable=True)
 
     # RELATIONSHIPS
     assignedTaskId = Column(Integer, ForeignKey(f"{settings.TABLE_NAMES['tasks']}.id"), nullable=False)

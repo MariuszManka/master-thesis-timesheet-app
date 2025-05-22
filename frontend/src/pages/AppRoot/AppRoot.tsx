@@ -20,6 +20,8 @@ import AdminPanelViewAllTaskPage from 'pages/AdminPanel/Subpages/AdminPanelViewA
 import AdminPanelEditSingleTaskPage from 'pages/AdminPanel/Subpages/AdminPanelEditSingleTaskPage/AdminPanelEditSingleTaskPage'
 import SingleTaskView from 'components/Views/SingleTaskView/SingleTaskView'
 import EditSingleTaskPage from 'pages/TasksPage/EditSingleTaskPage/EditSingleTaskPage'
+import AdminPanelAddProjectPage from 'pages/AdminPanel/Subpages/AdminPanelAddProjectPage/AdminPanelAddProjectPage'
+import EditSingleProjectPage from 'pages/ProjectsPage/EditSingleProjectPage/EditSingleProjectPage'
 
 
 
@@ -37,6 +39,7 @@ const AppRoot = () => {
                   <Route path={`${AppLinks.tasksEditSingleTask}/:id`} element={<ProtectedRoute><EditSingleTaskPage /></ProtectedRoute>} />
                   <Route path={AppLinks.timesheet} element={<ProtectedRoute><TimesheetPage /></ProtectedRoute>} />
                   <Route path={AppLinks.projects} element={<ProtectedRoute><ProjectsPage /></ProtectedRoute>} />
+                  <Route path={`${AppLinks.projectsEditSingleProject}/:id`} element={<ProtectedRoute><EditSingleProjectPage /></ProtectedRoute>} />
                   <Route path={AppLinks.profile} element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                   <Route path={AppLinks.adminPanel} element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} >
                      <Route index element={<MainAdminPanelView />} />
@@ -45,6 +48,7 @@ const AppRoot = () => {
                      <Route path={AppLinks.adminPanelViewAllTasks} element={<AdminPanelViewAllTaskPage />} />
                      <Route path={AppLinks.adminPanelAddTask} element={<AdminPanelAddTaskPage />} />
                      <Route path={`${AppLinks.adminPanelEditTask}/:id`} element={<AdminPanelEditSingleTaskPage />} />
+                     <Route path={AppLinks.adminPanelAddProject} element={<AdminPanelAddProjectPage />} />
                   </Route>
                </Route>
                <Route path={AppLinks.login} element={<LoginPage />} />

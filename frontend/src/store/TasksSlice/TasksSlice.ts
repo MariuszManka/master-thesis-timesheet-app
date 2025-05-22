@@ -22,7 +22,7 @@ export interface ITaskForm {
    parentTaskId?: number | null;
    parentTask: ITaskResponseModel | null;
    estimatedHours?: number | null;
-   assignedUsers: IAllUsersNamesResponse[] | null;
+   assignedUsers: IAllUsersNamesResponse[];
 }
 
 export interface ITasksState {

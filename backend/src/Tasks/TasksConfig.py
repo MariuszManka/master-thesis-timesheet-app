@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
-from datetime import datetime
+from datetime import datetime, date
 from typing import List
 
 from src.Auth.AuthModel import Accounts
@@ -27,13 +27,13 @@ def get_visible_tasks_query(db: Session, current_user: Accounts):
     """
     if current_user.role == AppRoleEnum.admin:
         # Admin widzi wszystkie zdania
-        return db.query(Tasks)
+        return db.query(Tasks).order_by(Tasks.lastUpdateDateTime.desc())
     elif current_user.role == AppRoleEnum.manager:
         # Manager widzi tylko zadania z projektów, których jest właścicielem
-        return db.query(Tasks).join(Projects).filter(Projects.owner_id == current_user.id)
+        return db.query(Tasks).join(Projects).filter(Projects.owner_id == current_user.id).order_by(Tasks.lastUpdateDateTime.desc())
     elif current_user.role == AppRoleEnum.employee:
         # Użytkownik widzi tylko zadania z projektów, w których uczestniczy
-        return (db.query(Tasks).join(Projects).join(Projects.participants).filter(Accounts.id == current_user.id))
+        return (db.query(Tasks).join(Projects).join(Projects.participants).filter(Accounts.id == current_user.id).order_by(Tasks.lastUpdateDateTime.desc()))
  
 
 
@@ -269,9 +269,10 @@ def add_task_to_db(db: Session, task: TaskCreate, current_user: Accounts):
 
 
         assigned_users = [AllUsersResponse(id=user.id, user=user.user_info.full_name if user.user_info else "") for user in users]
-        new_task.createdDate = datetime.today()
+        new_task.createdDate = date.today()
         new_task.creatorFullName = current_user.user_info.full_name if current_user.user_info else ""
         new_task.owner_id = current_user.id
+        new_task.lastUpdateDateTime = datetime.today()
 
         db.add(new_task)
         db.commit()

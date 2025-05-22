@@ -1,14 +1,22 @@
 import React from 'react';
 
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
-import { Breadcrumbs, Link } from '@mui/material'
+import { Breadcrumbs, Card, CardActionArea, CardContent, CardMedia, Link, List, ListItem, ListItemButton, ListItemIcon, ListItemText } from '@mui/material'
 import { Outlet, NavLink } from 'react-router-dom'
 import { AppLinks } from 'common/AppLinks'
 import { Tree, TreeNodeTemplateOptions } from 'primereact/tree'
+import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import CreateNewFolderOutlined from '@mui/icons-material/CreateNewFolderOutlined';
+import FolderOutlinedIcon from '@mui/icons-material/FolderOutlined';
+import FolderCopyOutlinedIcon from '@mui/icons-material/FolderCopyOutlined';
+import AddTaskOutlinedIcon from '@mui/icons-material/AddTaskOutlined';
+import TaskAltOutlinedIcon from '@mui/icons-material/TaskAltOutlined';
+import DoneAllOutlinedIcon from '@mui/icons-material/DoneAllOutlined';
 
 
 import './AdminPanelStyles.scss'
-import { PanelMenu } from 'primereact/panelmenu'
 
 
 
@@ -63,7 +71,87 @@ export const MainAdminPanelView = () => {
          <Breadcrumbs aria-label="breadcrumb" style={{ marginLeft: 5, cursor: 'pointer' }}>
             <Link href={AppLinks.adminPanel} underline="hover" color='inherit'>Panel administracyjny</Link>
          </Breadcrumbs>
-         <PanelMenu model={mainAdminPanelOptions} multiple />
+         {/* <PanelMenu model={mainAdminPanelOptions} multiple /> */}
+         <div className='admin-panel-admin-cards-outer-wrapper'>
+            <List className={`admin-panel-single-card-content-outer-wrapper`}>
+               <ListItem className='admin-panel-admin-cards-list-heading' divider>
+               <PersonOutlineIcon  style={{ marginRight: 10 }}/>
+                  Akcje użytkowników
+               </ListItem>
+               <Link href={AppLinks.adminPanelAddUser} style={{ width: '100%', textDecoration: 'none'}}>
+                  <ListItemButton className='admin-panel-admin-cards-list-item'>
+                     <ListItemIcon>
+                        <PersonAddOutlinedIcon/>
+                     </ListItemIcon>
+                     <ListItemText>
+                        Dodaj użytkownika
+                     </ListItemText>
+                  </ListItemButton>
+               </Link>
+               <Link href={AppLinks.adminPanelAllUsers} style={{ width: '100%', textDecoration: 'none'}}>
+                  <ListItemButton className='admin-panel-admin-cards-list-item'>
+                     <ListItemIcon>
+                        <GroupOutlinedIcon />
+                     </ListItemIcon>
+                     <ListItemText>
+                        Wszyscy użytkownicy
+                     </ListItemText>
+                  </ListItemButton>              
+               </Link>
+            </List>
+            <List className={`admin-panel-single-card-content-outer-wrapper`}>
+               <ListItem className='admin-panel-admin-cards-list-heading' divider>
+                  <FolderOutlinedIcon style={{ marginRight: 10 }}/>
+                  Akcje projektów
+               </ListItem>
+               <Link href={AppLinks.adminPanelAddProject} style={{ width: '100%', textDecoration: 'none'}}>
+                  <ListItemButton className='admin-panel-admin-cards-list-item'>
+                     <ListItemIcon>
+                        <CreateNewFolderOutlined />
+                     </ListItemIcon>
+                     <ListItemText>
+                        Dodaj projekt
+                     </ListItemText>
+                  </ListItemButton>
+               </Link>
+               <Link href={AppLinks.projects} style={{ width: '100%', textDecoration: 'none'}}>
+                  <ListItemButton className='admin-panel-admin-cards-list-item'>
+                     <ListItemIcon>
+                        <FolderCopyOutlinedIcon />
+                     </ListItemIcon>
+                     <ListItemText>
+                        Wszystkie projekty
+                     </ListItemText>
+                  </ListItemButton>              
+               </Link>
+            </List>
+            <List className={`admin-panel-single-card-content-outer-wrapper`}>
+               <ListItem className='admin-panel-admin-cards-list-heading' divider>
+                  <AddTaskOutlinedIcon style={{ marginRight: 10 }}/>
+                  Akcje zadań
+               </ListItem>
+               <Link href={AppLinks.adminPanelAddTask} style={{ width: '100%', textDecoration: 'none'}}>
+                  <ListItemButton className='admin-panel-admin-cards-list-item'>
+                     <ListItemIcon>
+                        <TaskAltOutlinedIcon />
+                     </ListItemIcon>
+                     <ListItemText>
+                        Dodaj zadanie
+                     </ListItemText>
+                  </ListItemButton>
+               </Link>
+               <Link href={AppLinks.adminPanelViewAllTasks} style={{ width: '100%', textDecoration: 'none'}}>
+                  <ListItemButton className='admin-panel-admin-cards-list-item'>
+                     <ListItemIcon>
+                        <DoneAllOutlinedIcon />
+                     </ListItemIcon>
+                     <ListItemText>
+                        Wszystkie zadania
+                     </ListItemText>
+                  </ListItemButton>              
+               </Link>
+            </List>
+         </div>
       </>
    )
 }

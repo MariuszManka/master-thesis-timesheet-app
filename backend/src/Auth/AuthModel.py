@@ -20,7 +20,7 @@ class AddressType(str, Enum):
 class Accounts(Base):
     __tablename__ = settings.TABLE_NAMES['accounts']
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     email = Column(String, unique=True, index=True)
     active = Column(Boolean, index=True)
     role = Column(String, index=True)
@@ -78,7 +78,7 @@ class Accounts(Base):
 class UserInfo(Base):
     __tablename__ = settings.TABLE_NAMES['user_info']
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     account_id: Mapped[int] = mapped_column(ForeignKey(f"{settings.TABLE_NAMES['accounts']}.id"), unique=True)
     user_account: Mapped["Accounts"] = relationship(back_populates="user_info")
 
@@ -97,7 +97,7 @@ class UserInfo(Base):
 class UserPreferences(Base):
     __tablename__ = settings.TABLE_NAMES['user_preferences']
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     account_id: Mapped[int] = mapped_column(ForeignKey(f"{settings.TABLE_NAMES['accounts']}.id"), unique=True)
     user_account: Mapped["Accounts"] = relationship(back_populates="user_preferences")
 
@@ -110,7 +110,7 @@ class UserPreferences(Base):
 class UserAddresses(Base):
     __tablename__ = settings.TABLE_NAMES['user_addresses']
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     account_id: Mapped[int] = mapped_column(ForeignKey(f"{settings.TABLE_NAMES['accounts']}.id"), unique=True)
     user_account: Mapped["Accounts"] = relationship(back_populates="user_addresses")
 
@@ -234,3 +234,4 @@ class TokenData(BaseModel):
 
 
 ProjectResponse.model_rebuild()
+TasksResponse.model_rebuild()

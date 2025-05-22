@@ -32,7 +32,7 @@ project_participants = Table(
 class Projects(Base):
     __tablename__ = settings.TABLE_NAMES['projects']
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name = Column(String, index=True, unique=True, nullable=False)
     description = Column(Text, nullable=False)
     start_date = Column(Date, nullable=False)
@@ -80,8 +80,8 @@ class ProjectResponse(ProjectBase):
     owner_full_name: Optional[str] = None
     status: Optional[ProjectStatus] = next(iter(ProjectStatus))
     tasks: List[TasksResponse] = []
-    participants: List["AccountsProjectsResponse"] = []  # <-- jako string
-    owner: Optional["AccountsProjectsResponse"] = None   # <-- jako string
+    participants: List["AccountsProjectsResponse"] = [] 
+    owner: Optional["AccountsProjectsResponse"] = None  
     total_time_spent: Optional[float] = None
 
     class Config:
@@ -95,3 +95,10 @@ class ProjectsSubjectResponse(BaseModel):
     class Config:
          from_attributes = True
 
+class ProjectCreate(BaseModel):
+    name: str
+    description: str 
+    owner_id: int
+    status: ProjectStatus
+    start_date: date
+    end_date: date

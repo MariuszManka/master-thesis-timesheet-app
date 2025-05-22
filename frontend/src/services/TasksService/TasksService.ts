@@ -151,12 +151,12 @@ export class TasksService {
       return (await this._client.delete<IOperationSuccessfulResponse>(userToDeleteUrl, true)).data
    }
 
-   public async updateSelectedTask(currentUserUpdatedData: IUpdateCurrentTaskData): Promise<any> {
-      const { currentTaskId, updatedTaskData } = currentUserUpdatedData
-      const updateCurrentUserUrl = `${this._updateSelectedTaskPath}/${currentTaskId}`
+   public async updateSelectedTask(currentTaskUpdatedData: IUpdateCurrentTaskData): Promise<any> {
+      const { currentTaskId, updatedTaskData } = currentTaskUpdatedData
+      const updateCurrentTaskUrl = `${this._updateSelectedTaskPath}/${currentTaskId}`
 
       return (await this._client.patch<ITaskResponseModel, ICreateTaskData>(
-         updateCurrentUserUrl, 
+         updateCurrentTaskUrl, 
          updatedTaskData,
          true
       )).data

@@ -1,7 +1,7 @@
 import base64
 
 from fastapi import APIRouter
-from fastapi import Depends
+from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -14,7 +14,7 @@ from src.Auth.AuthConfig import get_current_active_user
 from src.GlobalConfig import settings, AppRoleEnum
 
 from src.Settings.SettingsModel import SettingsResponse, SettingsTaskInfoResponse, AllUsersResponse
-from src.Projects.ProjectsModels import Projects, project_participants
+from src.Projects.ProjectsModels import Projects, project_participants, ProjectStatus
 
 #TODO PRZENIEŚĆ DO JEDNEGO PLIKU
 import logging
@@ -31,6 +31,7 @@ async def get_current_app_settings(current_user: Accounts = Depends(get_current_
       Endpoint zwracający konfigurację 
    """
    return SettingsResponse(
+      appProjectStatuses= [e.value for e in ProjectStatus],
       appTaskPriority = [e.value for e in AppTaskPriority],
       appTaskStatuses = [e.value for e in AppTaskStatuses],
       appTaskTypes = [e.value for e in AppTaskTypes],
@@ -48,6 +49,19 @@ async def get_current_app_settings(db: Session = Depends(get_database), current_
 
    return [{"id": task.id, "label": f"{task.id} - {task.subject}"} for task in ordered_tasks]
 
+
+
+@settingsRouter.get("/all-users-names-by-types", tags=["Settings API"])
+async def get_all_users_list(user_type: AppRoleEnum,db: Session = Depends(get_database), current_user: Accounts = Depends(get_current_active_user)):
+   """
+      Endpoint zwracający listę obecnie utworzonych w systemie kont użytkowników w zależności od ich typu.
+   """
+   if current_user.role == AppRoleEnum.employee:
+      raise HTTPException(status_code=403, detail="Nie masz uprawnień do przeglądania wszystkich użytkowników.")
+
+
+   all_users = (db.query(UserInfo.id, UserInfo.full_name).join(Accounts, Accounts.id == UserInfo.account_id).filter(Accounts.role == user_type).distinct().all())
+   return [AllUsersResponse(id=user.id, user=user.full_name) for user in all_users]
     
 
 @settingsRouter.get("/all-users-names", tags=["Settings API"])

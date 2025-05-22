@@ -62,7 +62,7 @@ export const MainEditSingleTaskView = () => {
       <>
          <Breadcrumbs aria-label="breadcrumb" style={{ marginLeft: 5, cursor: 'pointer' }}>
             <Link href={AppLinks.tasks} underline="hover" color='inherit'>Zadania</Link>
-            <Link href={`${AppLinks.tasksEditSingleTask}/${id}`} underline="hover" color='inherit'>Edytuj zadanie #{id}</Link>
+            <Link href={`${AppLinks.tasksEditSingleTask}/${id}`} underline="hover" color='inherit'>Edycja zadania #{id}</Link>
          </Breadcrumbs>
          <TaskForm isEditMode={true} />
       </>
@@ -75,7 +75,7 @@ const EditSingleTaskPage = () => {
       <div className='tasks-page-outer-wrapper'>
          <header className='tasks-page-header-wrapper'>
             <TaskAltIcon />
-            <h1>Edytuj zadanie</h1>
+            <h1>Edycja zadania</h1>
          </header>
          <section className='tasks-page-content-section-outer-wrapper'>
             <MainEditSingleTaskView />

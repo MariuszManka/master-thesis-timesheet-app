@@ -1,29 +1,28 @@
-import React, { useState, useMemo, useCallback, useRef, useEffect, useDeferredValue } from 'react'
+import React, { useState, useMemo, useCallback, useEffect } from 'react'
 import * as Yup from 'yup'
-import { Dropdown } from 'primereact/dropdown' 
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { DateTime } from 'luxon'
-import { InputText } from 'primereact/inputtext'
 import { Editor } from 'primereact/editor'
-import { Calendar } from 'primereact/calendar'
-import { InputNumber } from 'primereact/inputnumber'
 import { Autocomplete, Button, TextField } from '@mui/material'
 import { useSnackbar } from 'notistack'
 
 import tasksService from 'services/TasksService/TasksService'
 import { AppState } from 'store'
-import { defaultTaskFormObject, ITaskForm, resetTaskForm } from 'store/TasksSlice/TasksSlice'
+import { ITaskForm, resetTaskForm, setCurrentAllTasksTableSettings } from 'store/TasksSlice/TasksSlice'
 import { isDateValid } from 'common/helpers/yupValidationsHelpers'
 import { Environment } from 'environment/AppSettings'
 import { AppLinks } from 'common/AppLinks'
-
-import './TaskFormStyles.scss'
-import '../FormStyles.scss'
-import { MultiSelect } from 'primereact/multiselect'
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers'
 import { AdapterLuxon } from '@mui/x-date-pickers/AdapterLuxon'
 import projectsService, { IAllProjectsSubjectsModel } from 'services/ProjectsService/ProjectsService'
+import AsyncAutocomplete from '../Inputs/AsyncAutoselect'
+import settingsService, { IAllUsersNamesResponse, IFetchTaskInfoResponse } from 'services/SettingsService/SettingsService'
+import { SystemRoles } from 'common/roleConfig/globalRoleConfig'
+
+
+import './TaskFormStyles.scss'
+import '../FormStyles.scss'
 
 const RenderAddTaskEditorHeader = () => (
    <span className="ql-formats" style={{ height: 24 }}>
@@ -58,6 +57,7 @@ const TaskForm = ({ isEditMode, isOnlyFieldsMode }: { isEditMode: boolean, isOnl
       appDatabaseDateFormatForFront, allTasksInfoArray, appAllUsersNames, currentUserAllProjectsSubjects
    } = useSelector((state: AppState) => state.applicationState)
    const  { createdDate, ...taskForm } = useSelector((state: AppState) => state.tasksState.taskForm)
+   const currentUserRole = useSelector((state: AppState) => state.currentUserState.role)
  
 
    const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
@@ -71,6 +71,7 @@ const TaskForm = ({ isEditMode, isOnlyFieldsMode }: { isEditMode: boolean, isOnl
             subject: Yup.string().required("Uzupełnij pole"),
             description: Yup.string().required("Uzupełnij pole"),
             startingDate: Yup.string().required("Uzupełnij pole").test(isDateValid),
+            assignedUsers: Yup.array().min(1, "Wybierz co najmniej jednego użytkownika"),
             dueDate: Yup.string().notRequired().test(isDateValid),
          }),
       []
@@ -100,24 +101,36 @@ const TaskForm = ({ isEditMode, isOnlyFieldsMode }: { isEditMode: boolean, isOnl
             }
 
             if (isEditMode && id) {               
-               await tasksService.updateSelectedTask({ updatedTaskData: completeTaskObject, currentTaskId: parseInt(id) })
-               enqueueSnackbar(`Poprawnie zaktualizowano zadanie! #${id}`, { variant: 'success', autoHideDuration: 5000 })
+               try {
+                  await tasksService.updateSelectedTask({ updatedTaskData: completeTaskObject, currentTaskId: parseInt(id) })
+                  enqueueSnackbar(`Poprawnie zaktualizowano zadanie!`, { variant: 'success', autoHideDuration: 5000 })
+               }
+               catch (error: any) {
+                  enqueueSnackbar(`Błąd. Nie udało się zaktualizować zadania!`, { variant: 'error', autoHideDuration: 5000, preventDuplicate: true })
+                  return
+               } 
             } 
             else {
-               await tasksService.createTask(completeTaskObject)
-               enqueueSnackbar("Poprawnie dodano nowe zadanie!", { variant: 'success', autoHideDuration: 5000 })
+               try {
+                  await tasksService.createTask(completeTaskObject)
+                  enqueueSnackbar("Poprawnie dodano nowe zadanie!", { variant: 'success', autoHideDuration: 5000 })
+               }
+               catch (error:  any){
+                  enqueueSnackbar(`Błąd. Nie udało się dodać zadania!`, { variant: 'error', autoHideDuration: 5000, preventDuplicate: true })
+                  return
+               }
             }
             
             dispatch(resetTaskForm())
             setLocalTaskForm(taskForm)
             setValidationErrors({})
 
+            dispatch(setCurrentAllTasksTableSettings({ offset: 0, limit: Environment.defaultRowsPerTablePage }))
             navigate(isFromAdminPage?  AppLinks.adminPanelViewAllTasks: AppLinks.tasks)
          } 
          catch (error: any) {
             if (error.inner) {
                const errors: Record<string, string> = {}
-               console.log("error", error);
                
                error.inner.forEach((err: any) => (errors[err.path] = err.message))
                setValidationErrors(errors)
@@ -144,21 +157,20 @@ const TaskForm = ({ isEditMode, isOnlyFieldsMode }: { isEditMode: boolean, isOnl
 
    return (
       <form className={`app-page-form-wrapper ${isOnlyFieldsMode === true ? 'app-form-wrapper-only-fields-mode' : ''}`} onSubmit={handleFormSubmit}>
-         <h4 className="app-page-form-label">{isEditMode ? `Edytuj zadanie #${id}` : "Nowe zadanie"}</h4>
+         <h4 className="app-page-form-label">{isEditMode ? `Edycja zadania #${id}` : "Nowe zadanie"}</h4>
 
          <div className="app-page-form-input-wrapper app-page-form-full-width-input-wrapper">
             {!isOnlyFieldsMode === true && <label htmlFor="AddProjectSubject" className="required-label">Projekt</label>}
-            <Autocomplete
+            <AsyncAutocomplete
                id="AddProjectSubject"
                sx={{ minWidth: 150 }}
+               openOnFocus handleHomeEndKeys
                value={currentUserAllProjectsSubjects.find(task => task.id === localTaskForm.project_id) || undefined}
                onChange={(e, newValue) => handleInputChange('project_id', newValue.id)}
-               disableClearable
-               openOnFocus	
-               handleHomeEndKeys
-               options={currentUserAllProjectsSubjects}
-               getOptionLabel={(option) => `[${option.id}] ${option.subject}`}
-               renderInput={(params) => (<TextField {...params} label="Projekt" />)}
+               fetchOptions={() => projectsService.fetchAllProjectsSubjectsList()}
+               getOptionLabel={(option: IAllProjectsSubjectsModel) =>`[${option.id}] ${option.subject}`}
+               isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+               renderInput={(params) => <TextField {...params} label={isOnlyFieldsMode === true ? "Projekt" : undefined} />}
             />
             <small className="p-error app-form-helper-text">{validationErrors.subject}</small>
          </div>
@@ -175,73 +187,42 @@ const TaskForm = ({ isEditMode, isOnlyFieldsMode }: { isEditMode: boolean, isOnl
             />
             <small className="p-error app-form-helper-text">{validationErrors.subject}</small>
          </div>
-         <div className="app-page-form-two-column-input-wrapper">
-            <div className="app-page-form-input-wrapper">
+         <div className="app-page-form-input-wrapper app-page-form-full-width-input-wrapper">
                {!isOnlyFieldsMode === true && <label htmlFor="AddTaskParentTaskId">Zagadnienie nadrzędne</label>}
-               {/* <Autocomplete
-                  id="AddTaskParentTaskId"
-                  value={localTaskForm.parentTaskId}
-                  getOptionLabel={(option) => option.label}
-                  onChange={(e) => handleInputChange('parentTaskId', e.target.value)}
-                  options={allTasksInfoArray}
-                  // optionLabel="label"
-                  // optionValue="id"
-                  // placeholder="Wybierz zadanie nadrzędne (opcjonalnie)"
-                  className="app-page-form-input"
-               /> */}
-
-               <Autocomplete
+               <AsyncAutocomplete
                   id="AddTaskParentTaskId"
                   sx={{ minWidth: 150 }}
+                  openOnFocus handleHomeEndKeys
                   value={allTasksInfoArray.find(task => task.id === localTaskForm.parentTaskId) || undefined}
-                  getOptionLabel={(option) => option.label}
-                  isOptionEqualToValue={(option, value) => option.id === value.id}
                   onChange={(e, newValue) => handleInputChange('parentTaskId', newValue ? newValue.id : null)}
-                  openOnFocus	handleHomeEndKeys
-                  options={allTasksInfoArray}
+                  fetchOptions={() => settingsService.fetchAllTasksInfo()}
+                  getOptionLabel={(option: IFetchTaskInfoResponse) => option.label}
                   classes={{ root: 'app-page-form-input'}}
-                  renderInput={(params) => (<TextField {...params} label={isOnlyFieldsMode === true ? "Wybierz zadanie nadrzędne (opcjonalnie)" : undefined} />)}
+                  isOptionEqualToValue={(option: any, value: any) => option.id === value.id}
+                  renderInput={(params) => (<TextField {...params} label={isOnlyFieldsMode === true ? "Zadanie nadrzędne" : undefined} />)}
                />
                <small className="p-error app-form-helper-text" /> {/* PLACEHOLDER */}
-            </div>
 
-            <div className="app-page-form-input-wrapper">
-            {!isOnlyFieldsMode === true && <label htmlFor="AddTaskAssignedUserId">Przypisani użytkownicy</label>}
-               {/* <MultiSelect 
-                  id="AddTaskAssignedUserId"
-                  value={localTaskForm.assignedUsers} optionLabel="user" options={appAllUsersNames} 
-                  onChange={(e) => handleInputChange("assignedUsers", e.value)} // Pass the selected values
-                  display="chip" placeholder="Przypisz użytkownika" 
-                  className="app-page-form-input" panelClassName="app-page-form-multiselect-input-panel"
-               /> */}
-                  <Autocomplete
+            <div className="app-page-form-input-wrapper app-page-form-full-width-input-wrapper">
+               {!isOnlyFieldsMode === true && <label htmlFor="AddTaskAssignedUserId" className="required-label">Przypisani użytkownicy</label>}
+                  <AsyncAutocomplete
                      id="AddTaskAssignedUserId"
                      sx={{ minWidth: 150 }}
-                     multiple limitTags={2}
+                     multiple limitTags={3} openOnFocus handleHomeEndKeys
                      value={localTaskForm.assignedUsers !== null? localTaskForm.assignedUsers : []}
-                     getOptionLabel={(option) => option.user}
-                     isOptionEqualToValue={(option, value) => option.id === value.id}
                      onChange={(e, newValue) => handleInputChange('assignedUsers', newValue)}
-                     openOnFocus	handleHomeEndKeys
-                     options={appAllUsersNames} 
+                     fetchOptions={() => settingsService.fetchAllUsersNamesByType(currentUserRole === SystemRoles.ADMIN? SystemRoles.MANAGER : SystemRoles.EMPLOYEE)}
+                     getOptionLabel={(option: IAllUsersNamesResponse) => option.user}
+                     isOptionEqualToValue={(opt: any, val: any) => opt.id === val.id}
                      classes={{ root: 'app-page-form-input', inputRoot: 'app-page-form-multiselect-input', tag: 'app-page-form-multiselect-input-tag'}}
                      renderInput={(params) => (<TextField {...params}  label={isOnlyFieldsMode === true ? "Przypisani użytkownicy" : undefined} />)}
                   />
-               <small className="p-error app-form-helper-text" /> {/* PLACEHOLDER */}
+               <small className="p-error app-form-helper-text">{validationErrors.assignedUsers}</small>
             </div>
          </div>
          <div className="app-page-form-two-column-input-wrapper">
             <div className="app-page-form-input-wrapper">
                {!isOnlyFieldsMode === true && <label htmlFor="AddTaskType">Typ zagadnienia</label>}
-
-               {/* <Dropdown
-                  id="AddTaskType"
-                  value={localTaskForm.taskType}
-                  onChange={(e) => handleInputChange("taskType", e.target.value)}
-                  options={appTaskTypes}
-                  placeholder="Wybierz typ zagadnienia (opcjonalnie)"
-                  className="app-page-form-input"
-               /> */}
                   <Autocomplete
                      id="AddTaskType"
                      sx={{ minWidth: 150 }}
@@ -256,14 +237,6 @@ const TaskForm = ({ isEditMode, isOnlyFieldsMode }: { isEditMode: boolean, isOnl
             </div>
             <div className="app-page-form-input-wrapper">
                {!isOnlyFieldsMode === true && <label htmlFor="AddTaskStatus">Status</label>}
-               {/* <Dropdown
-                  id="AddTaskStatus"
-                  value={localTaskForm.taskStatus}
-                  onChange={(e) => handleInputChange("taskStatus", e.target.value)}
-                  options={appTaskStatuses}
-                  placeholder="Wybierz aktualny status (opcjonalnie)"
-                  className="app-page-form-input"
-               /> */}
                   <Autocomplete
                      id="AddTaskStatus"
                      sx={{ minWidth: 150 }}
@@ -281,17 +254,6 @@ const TaskForm = ({ isEditMode, isOnlyFieldsMode }: { isEditMode: boolean, isOnl
          <div className="app-page-form-two-column-input-wrapper">
             <div className="app-page-form-input-wrapper">
                {!isOnlyFieldsMode === true && <label htmlFor="AddTaskStartingDate" className="required-label">Data rozpoczęcia</label>}
-               {/* <Calendar
-                  id="AddTaskStartingDate"
-                  value={localTaskForm.startingDate ? DateTime.fromFormat(localTaskForm.startingDate, Environment.dateFormatToDisplay).toJSDate() : null}
-                  onChange={(e) => e.value ? handleInputChange("startingDate", DateTime.fromJSDate(e.value).toFormat(Environment.dateFormatToDisplay)) : null }
-                  showIcon={true}
-                  invalid={!!validationErrors.startingDate}
-                  dateFormat={"dd/mm/yy"}
-                  mask="99/99/9999"
-                  maskSlotChar="DD/MM/RRRR"
-                  placeholder="DD/MM/RRRR"
-               /> */}
             <LocalizationProvider dateAdapter={AdapterLuxon} adapterLocale='pl'>
                <DatePicker
                   slotProps={{ textField: { id: "AddTaskStartingDate" } }}
@@ -306,17 +268,6 @@ const TaskForm = ({ isEditMode, isOnlyFieldsMode }: { isEditMode: boolean, isOnl
             </div>
             <div className="app-page-form-input-wrapper">
                {!isOnlyFieldsMode === true && <label htmlFor="AddTaskDueDate">Data zakończenia</label>}  
-               {/* <Calendar
-                  id="AddTaskDueDate"
-                  value={localTaskForm.dueDate ? DateTime.fromFormat(localTaskForm.dueDate, Environment.dateFormatToDisplay).toJSDate() : null}
-                  onChange={(e) => e.value ? handleInputChange("dueDate", DateTime.fromJSDate(e.value).toFormat(Environment.dateFormatToDisplay)) : null }
-                  showIcon={true}
-                  invalid={!!validationErrors.dueDate}
-                  dateFormat={"dd/mm/yy"}
-                  mask="99/99/9999"
-                  maskSlotChar="DD/MM/RRRR"
-                  placeholder="DD/MM/RRRR"
-               /> */}
                <LocalizationProvider dateAdapter={AdapterLuxon} adapterLocale='pl'>
                   <DatePicker
                      slotProps={{ textField: { id: "AddTaskDueDate" } }}
@@ -334,15 +285,6 @@ const TaskForm = ({ isEditMode, isOnlyFieldsMode }: { isEditMode: boolean, isOnl
          <div className="app-page-form-two-column-input-wrapper">
             <div className="app-page-form-input-wrapper">
                {!isOnlyFieldsMode === true && <label htmlFor="AddTaskPriority">Priorytet</label>}
-               {/* <Dropdown
-                  id="AddTaskPriority"
-                  value={localTaskForm.priority}
-                  onChange={(e) => handleInputChange("priority", e.target.value)}
-                  invalid={!!validationErrors.priority}
-                  options={appTaskPriority}
-                  placeholder="Wybierz priorytet (opcjonalne)"
-                  className="app-page-form-input"
-               /> */}
                   <Autocomplete
                      id="AddTaskPriority"
                      sx={{ minWidth: 150 }}
@@ -358,17 +300,6 @@ const TaskForm = ({ isEditMode, isOnlyFieldsMode }: { isEditMode: boolean, isOnl
             </div>
             <div className="app-page-form-input-wrapper">
                {!isOnlyFieldsMode === true && <label htmlFor="AddTaskEstimatedHours">Szacowany czas</label>}
-               {/* <InputNumber
-                  name="AddTaskEstimatedHours"
-                  inputId="AddTaskEstimatedHours"
-                  invalid={!!validationErrors.estimatedHours}
-                  value={localTaskForm.estimatedHours}
-                  className="app-page-form-input"
-                  placeholder="Czas w godzinach (opcjonalnie)"
-                  min={0} max={1000}
-                  maxFractionDigits={2}
-                  onValueChange={(e) => handleInputChange("estimatedHours", e.value)}
-               /> */}
                <TextField
                   type="number"
                   slotProps={{ htmlInput : { inputMode: 'decimal', min: 1, max: 500 } }}

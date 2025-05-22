@@ -54,3 +54,79 @@
       font-size: 20px;
    }
 }
+
+
+.admin-panel-admin-cards-outer-wrapper {
+   display: grid;
+   grid-template-columns: repeat(auto-fit, 400px );
+   gap: 40px;
+   
+   .admin-panel-single-card-content-outer-wrapper{
+      width: 400px;
+      margin: 0 auto;
+      border: 1px solid $main-app-navbar-background !important;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 0 !important;
+
+
+      .admin-panel-admin-cards-list-heading {
+         font-size: 22px;
+         color: $main-app-navy-color;
+         padding: 15px 16px;
+         white-space: nowrap;
+      }
+
+      .admin-panel-admin-cards-list-item {
+         width: 100%;
+         color: $main-app-navy-color;
+         white-space: nowrap;
+
+         & svg {
+            fill: $main-app-navy-color;
+         }
+      } 
+
+            
+   //    & h5 {
+   //       text-align: center;
+   //       margin: 0 auto;
+   //       width: 100%;
+   //       padding: 25px 30px;
+   //       margin-bottom: 5px;
+   //       font-size: 24px;
+   //       font-weight: 600;
+   //       color: $main-app-navy-color;
+   //    }
+
+   //    .admin-panel-card-actions-wrapper {
+   //       display: flex;
+   //       justify-content: space-between;
+   //       align-items: center;
+
+   //       & .admin-panel-card-content-action-area {
+   //          display: inline-flex;
+   //          align-items: center;
+   //          padding: 10px 20px;
+   //          column-gap: 5px;
+
+   //          & p {
+   //             color: $main-app-navy-color;
+   //          }
+
+   //          & svg {
+   //             margin-top: -2px;
+   //             fill: $main-app-navy-color;
+   //          }
+   //       } 
+      
+   // }
+
+
+     
+
+   }
+}
+

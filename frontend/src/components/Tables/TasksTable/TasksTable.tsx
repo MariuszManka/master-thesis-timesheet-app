@@ -459,7 +459,7 @@ const TasksTable = (props: ITasksTableProps) => {
             onHide={() => setIsDialogVisible(false)} footer={dialogFooterContent}
          >
             Czy na pewno chcesz usunąć zadanie: <br/>
-            <b>#{selectedTaskRow?.id} {selectedTaskRow?.subject}?</b>
+            <b>{`[${selectedTaskRow?.id}] ${selectedTaskRow?.subject}?`}</b>
          </Dialog>
       </>
    )

@@ -34,7 +34,7 @@ root_router.include_router(ProjectsRouter.projectsRouter)
 # ============== MAIN FASTAPI INSTANCE & CONFIG =======================
 origins = [
     "http://localhost:3000",  # REACT DEVELOPMENT SERVER
-    str(settings.FRONTEND_PRD_URL_PATH)  # PRODUCTION DOMAIN
+    "https://master-thesis-timesheet-app.up.railway.app"  # PRODUCTION DOMAIN
 ]
 
 app = FastAPI (

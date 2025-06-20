@@ -47,6 +47,7 @@ class Settings(BaseSettings):
    SECRET_KEY: str
    ALGORITHM: str
    ACCESS_TOKEN_EXPIRE_MINUTES: str
+   FRONTEND_PRD_URL_PATH: str
 
 
 settings = Settings()
